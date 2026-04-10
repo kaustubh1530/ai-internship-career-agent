@@ -39,7 +39,7 @@ Adzuna API → Python → OpenAI → Matching Engine → Ranked Output
 
 ## 📸 Demo Proof
 ![Fetch Jobs](assets/fetch.png)
-![Results](assets/results.png)
+![Results](assets/fetch1.png)
 ![Demo](assets/demo.gif)
 
 ## Why This Matters
