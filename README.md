@@ -78,7 +78,6 @@ Streamlit UI (Final Output)
 
 ##  Run Locally
 
-```bash
 # Install dependencies
 pip install -r requirements.txt
 
