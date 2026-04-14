@@ -8,7 +8,12 @@ import os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from backend.search_jobs import search
-from backend.resume_parser import extract_text_from_pdf, extract_skills_from_text
+from backend.resume_parser import (
+    extract_text_from_pdf,
+    extract_skills_from_text,
+    ai_match_skills
+)
+from backend.agents import resume_agent, job_agent, advisor_agent
 
 # ==============================
 # PAGE CONFIG
@@ -48,10 +53,7 @@ search_button = st.sidebar.button("Search Jobs 🚀")
 # ==============================
 user_skills = [s.strip().lower() for s in skills_input.split(",") if s.strip()]
 
-# Ignore low-value tools
-IGNORE_SKILLS = [
-    "vs code", "postman", "jupyter", "git", "github"
-]
+IGNORE_SKILLS = ["vs code", "postman", "jupyter", "git", "github"]
 
 # ==============================
 # RESUME PROCESSING
@@ -61,45 +63,14 @@ if uploaded_file:
     with st.sidebar.spinner("📄 Reading resume..."):
         resume_text = extract_text_from_pdf(uploaded_file)
 
-    with st.sidebar.spinner("🧠 Extracting skills using AI..."):
+    with st.sidebar.spinner("🧠 Extracting skills..."):
         extracted_skills = extract_skills_from_text(resume_text)
 
-    # Filter + limit skills
     extracted_skills = [s for s in extracted_skills if s not in IGNORE_SKILLS]
-    user_skills = extracted_skills[:10]   # limit to top 10
+    user_skills = extracted_skills[:10]
 
-    st.sidebar.success("✅ Skills extracted from resume")
-
-    st.sidebar.markdown("### 🧠 Extracted Skills")
+    st.sidebar.success("✅ Skills extracted")
     st.sidebar.write(", ".join(user_skills))
-
-
-# ==============================
-# SKILL MATCHING LOGIC
-# ==============================
-skill_aliases = {
-    "machine learning": ["ml"],
-    "artificial intelligence": ["ai"],
-    "python": ["python3"],
-    "sql": ["mysql", "postgres", "database"],
-    "embedding": ["embeddings"],
-    "openapi": ["api", "rest api", "fastapi"],
-    "vector search": ["faiss", "similarity search"],
-}
-
-def is_skill_match(skill, text):
-
-    if skill in text:
-        return True
-
-    if skill in skill_aliases:
-        for alias in skill_aliases[skill]:
-            if alias in text:
-                return True
-
-    words = skill.split()
-    return any(word in text for word in words)
-
 
 # ==============================
 # MAIN LOGIC
@@ -116,23 +87,21 @@ if search_button:
     st.success(f"Found {len(jobs)} matches")
     st.markdown("## 🎯 Top Matches For You")
 
-    # ==============================
-    # DISPLAY JOBS
-    # ==============================
-    for job in jobs:
+    # limit jobs for performance
+    for job in jobs[:3]:
 
         job_text = (
             job.get("title", "") + " " +
             job.get("description", "")
         ).lower()
 
-        from backend.resume_parser import ai_match_skills
-
+        # ==============================
+        # AI SKILL MATCH
+        # ==============================
         matched = ai_match_skills(user_skills, job_text)
-        
-        # cleaner missing logic
+
         if len(matched) >= 2:
-            missing = [skill for skill in user_skills if skill not in matched][:5]
+            missing = [s for s in user_skills if s not in matched][:5]
         else:
             missing = []
 
@@ -141,6 +110,16 @@ if search_button:
             matched = ["Relevant (AI Match)"]
             ai_match = True
 
+        # ==============================
+        # AGENTS (CORRECT POSITION)
+        # ==============================
+        resume_analysis = resume_agent(user_skills)
+        job_analysis = job_agent(job_text)
+        advice = advisor_agent(user_skills, job_text)
+
+        # ==============================
+        # UI CARD
+        # ==============================
         with st.container():
 
             st.markdown("""
@@ -153,7 +132,6 @@ if search_button:
                 ">
             """, unsafe_allow_html=True)
 
-            # TITLE
             st.markdown(f"### 💼 {job.get('title', 'No Title')}")
 
             col1, col2 = st.columns(2)
@@ -173,31 +151,40 @@ if search_button:
             col3, col4 = st.columns(2)
 
             with col3:
-                st.markdown("**✅ Matched Skills**")
                 st.success(", ".join(matched))
 
             with col4:
-                st.markdown("**❌ Missing Skills**")
                 if missing:
                     st.warning(", ".join(missing))
                 else:
-                    st.write("Looks like a strong match 🚀")
+                    st.write("Strong match 🚀")
 
             # ==============================
-            # INSIGHT
+            # AGENT INSIGHTS
+            # ==============================
+            st.markdown("#### 🧠 Resume Insights")
+            st.info(resume_analysis)
+
+            st.markdown("#### 📊 Job Insights")
+            st.info(job_analysis)
+
+            st.markdown("#### 💡 Career Advice")
+            st.success(advice)
+
+            # ==============================
+            # WHY MATCH
             # ==============================
             st.markdown("#### 💡 Why this matches you")
 
             if ai_match:
                 st.info("Matched using AI semantic search (RAG).")
             else:
-                st.info(f"Matched based on your skills: {', '.join(matched)}")
+                st.info(f"Matched skills: {', '.join(matched)}")
 
             # DESCRIPTION
             st.markdown("#### 📝 Description")
             st.write(job.get("description", "")[:250] + "...")
 
-            # APPLY
             if job.get("url"):
                 st.markdown(f"[👉 Apply Here]({job['url']})")
 
