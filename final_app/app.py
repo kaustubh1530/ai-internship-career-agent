@@ -7,13 +7,14 @@ import os
 # ==============================
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
+# Backend imports
 from backend.search_jobs import search
 from backend.resume_parser import (
     extract_text_from_pdf,
     extract_skills_from_text,
     ai_match_skills
 )
-from backend.agents import resume_agent, job_agent, advisor_agent
+from backend.agents import resume_agent, advisor_agent
 
 # ==============================
 # PAGE CONFIG
@@ -25,22 +26,40 @@ st.set_page_config(
 )
 
 # ==============================
+# GLOBAL STYLING
+# ==============================
+st.markdown("""
+<style>
+.card {
+    background-color: #111;
+    padding: 20px;
+    border-radius: 12px;
+    margin-bottom: 20px;
+    border: 1px solid #222;
+}
+.title {
+    font-size: 22px;
+    font-weight: bold;
+}
+</style>
+""", unsafe_allow_html=True)
+
+# ==============================
 # HEADER
 # ==============================
 st.title("🚀 AI Internship Career Agent")
 st.markdown("AI-powered job matching using RAG + Resume Intelligence")
-
 st.markdown("---")
 
 # ==============================
-# SIDEBAR INPUTS
+# SIDEBAR
 # ==============================
 st.sidebar.header("🔍 Search Jobs")
 
 query = st.sidebar.text_input("Job Role", placeholder="Software Engineer Intern")
 
 skills_input = st.sidebar.text_area(
-    "Your Skills (optional)",
+    "Your Skills",
     placeholder="Python, SQL, Machine Learning"
 )
 
@@ -49,7 +68,7 @@ uploaded_file = st.sidebar.file_uploader("Upload Resume (PDF)", type=["pdf"])
 search_button = st.sidebar.button("Search Jobs 🚀")
 
 # ==============================
-# SKILL PROCESSING
+# SKILLS
 # ==============================
 user_skills = [s.strip().lower() for s in skills_input.split(",") if s.strip()]
 
@@ -59,7 +78,6 @@ IGNORE_SKILLS = ["vs code", "postman", "jupyter", "git", "github"]
 # RESUME PROCESSING
 # ==============================
 if uploaded_file:
-
     with st.sidebar.spinner("📄 Reading resume..."):
         resume_text = extract_text_from_pdf(uploaded_file)
 
@@ -73,22 +91,52 @@ if uploaded_file:
     st.sidebar.write(", ".join(user_skills))
 
 # ==============================
+# PROFILE SECTION
+# ==============================
+st.markdown("## 👤 Your Profile")
+
+colA, colB = st.columns(2)
+
+with colA:
+    st.markdown("### 🧠 Skills")
+    if user_skills:
+        st.success(", ".join(user_skills))
+    else:
+        st.warning("No skills provided")
+
+with colB:
+    st.markdown("### 📊 Search Info")
+    st.write(f"**Role:** {query if query else 'Not set'}")
+
+# ==============================
 # MAIN LOGIC
 # ==============================
 if search_button:
 
     if not query:
-        st.warning("⚠️ Please enter a job role")
+        st.warning("⚠️ Enter a job role")
         st.stop()
 
-    with st.spinner("🚀 Running AI job matching..."):
+    with st.spinner("🔎 Searching and analyzing jobs..."):
         jobs = search(query)
 
-    st.success(f"Found {len(jobs)} matches")
-    st.markdown("## 🎯 Top Matches For You")
+    if not jobs:
+        st.error("No jobs found")
+        st.stop()
 
-    # limit jobs for performance
-    for job in jobs[:3]:
+    # LIMIT FOR SPEED
+    jobs = jobs[:3]
+
+    # RUN RESUME AGENT ONCE (IMPORTANT)
+    resume_analysis = resume_agent(user_skills)
+
+    st.success(f"Found {len(jobs)} matches")
+    st.markdown("## 🎯 Top Matches")
+
+    # ==============================
+    # JOB LOOP
+    # ==============================
+    for i, job in enumerate(jobs):
 
         job_text = (
             job.get("title", "") + " " +
@@ -96,7 +144,7 @@ if search_button:
         ).lower()
 
         # ==============================
-        # AI SKILL MATCH
+        # MATCHING
         # ==============================
         matched = ai_match_skills(user_skills, job_text)
 
@@ -111,81 +159,84 @@ if search_button:
             ai_match = True
 
         # ==============================
-        # AGENTS (CORRECT POSITION)
+        # ADVISOR (ONLY 1 AI CALL HERE)
         # ==============================
-        resume_analysis = resume_agent(user_skills)
-        job_analysis = job_agent(job_text)
         advice = advisor_agent(user_skills, job_text)
 
         # ==============================
-        # UI CARD
+        # RANK LABEL
+        # ==============================
+        if i == 0:
+            st.markdown("## 🥇 Top Match")
+        elif i == 1:
+            st.markdown("## 🥈 Strong Match")
+        else:
+            st.markdown("## 🥉 Other Match")
+
+        # ==============================
+        # CARD
         # ==============================
         with st.container():
 
-            st.markdown("""
-                <div style="
-                    border:1px solid #ddd;
-                    border-radius:10px;
-                    padding:15px;
-                    margin-bottom:15px;
-                    background-color:#fafafa;
-                ">
+            st.markdown(f"""
+            <div class="card">
+                <div class="title">💼 {job.get('title')}</div>
+                <p>🏢 {job.get('company')} | 📍 {job.get('location')}</p>
+            </div>
             """, unsafe_allow_html=True)
 
-            st.markdown(f"### 💼 {job.get('title', 'No Title')}")
+            # SCORE BAR
+            score = job.get("score", 0)
+            st.progress(min(score, 1.0))
+            st.caption(f"⭐ Match Score: {round(score, 2)}")
+
+            # ==============================
+            # SKILLS
+            # ==============================
+            st.markdown("### 🧠 Skill Match")
 
             col1, col2 = st.columns(2)
 
             with col1:
-                st.write(f"🏢 **Company:** {job.get('company', 'N/A')}")
-                st.write(f"📍 **Location:** {job.get('location', 'N/A')}")
-
-            with col2:
-                st.write(f"⭐ **Match Score:** {round(job.get('score', 0), 2)}")
-
-            # ==============================
-            # SKILL MATCH
-            # ==============================
-            st.markdown("#### 🧠 Skill Match")
-
-            col3, col4 = st.columns(2)
-
-            with col3:
                 st.success(", ".join(matched))
 
-            with col4:
+            with col2:
                 if missing:
                     st.warning(", ".join(missing))
                 else:
                     st.write("Strong match 🚀")
 
             # ==============================
-            # AGENT INSIGHTS
+            # INSIGHTS
             # ==============================
-            st.markdown("#### 🧠 Resume Insights")
+            st.markdown("### 🤖 AI Insights")
+
+            st.markdown("**Resume Analysis**")
             st.info(resume_analysis)
 
-            st.markdown("#### 📊 Job Insights")
-            st.info(job_analysis)
-
-            st.markdown("#### 💡 Career Advice")
+            st.markdown("**Career Advice**")
             st.success(advice)
 
             # ==============================
             # WHY MATCH
             # ==============================
-            st.markdown("#### 💡 Why this matches you")
-
             if ai_match:
-                st.info("Matched using AI semantic search (RAG).")
+                st.info("Matched using AI semantic search (RAG)")
             else:
                 st.info(f"Matched skills: {', '.join(matched)}")
 
             # DESCRIPTION
-            st.markdown("#### 📝 Description")
+            st.markdown("### 📝 Description")
             st.write(job.get("description", "")[:250] + "...")
 
+            # APPLY
             if job.get("url"):
                 st.markdown(f"[👉 Apply Here]({job['url']})")
 
-            st.markdown("</div>", unsafe_allow_html=True)
+            st.markdown("---")
+
+# ==============================
+# FOOTER
+# ==============================
+st.markdown("---")
+st.caption("🚀 Built by Kaustubh Patil | AI Career Agent")
