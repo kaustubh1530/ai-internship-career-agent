@@ -75,7 +75,6 @@ An AI-powered career assistant that analyzes resumes, matches jobs using semanti
 
 ## Setup
 
-```bash
 git clone https://github.com/YOUR_USERNAME/ai-internship-career-agent.git
 cd ai-internship-career-agent
 
