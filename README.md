@@ -67,9 +67,7 @@ An AI-powered career assistant that analyzes resumes, matches jobs using semanti
 ---
 
 ## Demo
-
 ### Full App Walkthrough
-<<<<<<< HEAD
 ![Demo](assets/demo1.gif)
 ---
 
