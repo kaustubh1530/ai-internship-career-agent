@@ -70,12 +70,13 @@ An AI-powered career assistant that analyzes resumes, matches jobs using semanti
 
 ### Full App Walkthrough
 ![Demo](assets/demo1.gif)
+
 ![Demo](assets/demo2.gif)
 ---
 
 ## Setup
 
-git clone https://github.com/YOUR_USERNAME/ai-internship-career-agent.git
+git clone https://github.com/kaustubh1530/ai-internship-career-agent.git
 cd ai-internship-career-agent
 
 pip install -r requirements.txt
