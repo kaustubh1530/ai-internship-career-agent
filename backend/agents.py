@@ -1,88 +1,28 @@
-from openai import OpenAI
-import os
-from dotenv import load_dotenv
+from ai_langchain.chains.resume_chain import get_resume_chain
+from ai_langchain.chains.job_chain import get_job_chain
+from ai_langchain.chains.advisor_chain import get_advisor_chain
 
-load_dotenv()
-client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
-# =========================
-# RESUME AGENT
-# =========================
 def resume_agent(user_skills):
+    chain = get_resume_chain()
 
-    prompt = f"""
-    You are a Resume Analysis AI.
-
-    Given user skills:
-    {", ".join(user_skills)}
-
-    Return:
-    1. Top strengths (max 5)
-    2. Missing areas (max 5)
-
-    Format:
-    Strengths: ...
-    Weaknesses: ...
-    """
-
-    response = client.chat.completions.create(
-        model="gpt-4o-mini",
-        messages=[{"role": "user", "content": prompt}]
-    )
-
-    return response.choices[0].message.content
+    return chain.invoke({
+        "user_skills": ", ".join(user_skills)
+    })
 
 
-# =========================
-# JOB AGENT
-# =========================
 def job_agent(job_text):
+    chain = get_job_chain()
 
-    prompt = f"""
-    You are a Job Analysis AI.
-
-    Analyze the job description and extract:
-    - Required skills
-    - Job type (backend / frontend / AI / fullstack)
-
-    Job:
-    {job_text[:1500]}
-
-    Keep it short.
-    """
-
-    response = client.chat.completions.create(
-        model="gpt-4o-mini",
-        messages=[{"role": "user", "content": prompt}]
-    )
-
-    return response.choices[0].message.content
+    return chain.invoke({
+        "job_text": job_text[:1500]
+    })
 
 
-# =========================
-# ADVISOR AGENT
-# =========================
 def advisor_agent(user_skills, job_text):
+    chain = get_advisor_chain()
 
-    prompt = f"""
-    You are an AI Career Advisor.
-
-    User Skills:
-    {", ".join(user_skills)}
-
-    Job Description:
-    {job_text[:1500]}
-
-    Task:
-    1. Explain why this job matches the user
-    2. Suggest 2-3 skills to improve
-
-    Keep it short and practical.
-    """
-
-    response = client.chat.completions.create(
-        model="gpt-4o-mini",
-        messages=[{"role": "user", "content": prompt}]
-    )
-
-    return response.choices[0].message.content
+    return chain.invoke({
+        "user_skills": ", ".join(user_skills),
+        "job_text": job_text[:1500]
+    })
