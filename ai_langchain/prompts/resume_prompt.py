@@ -1,9 +1,12 @@
-from langchain_core.prompts import PromptTemplate
+from langchain.prompts import PromptTemplate
 
 resume_prompt = PromptTemplate(
-    input_variables=["user_skills"],
+    input_variables=["user_skills", "chat_history"],
     template="""
 You are a Resume Analysis AI.
+
+Conversation History:
+{chat_history}
 
 Given user skills:
 {user_skills}

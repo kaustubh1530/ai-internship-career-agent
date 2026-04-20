@@ -6,9 +6,11 @@ from ai_langchain.chains.advisor_chain import get_advisor_chain
 def resume_agent(user_skills):
     chain = get_resume_chain()
 
-    return chain.invoke({
-        "user_skills": ", ".join(user_skills)
-    })
+    skills_text = ", ".join(user_skills)
+
+    result = chain.run(user_skills=skills_text)
+
+    return result
 
 
 def job_agent(job_text):
