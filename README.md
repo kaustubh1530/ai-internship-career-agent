@@ -1,6 +1,6 @@
 # AI Internship Career Agent
 
-An AI-powered career assistant that analyzes resumes, matches jobs using semantic search (RAG), and provides personalized career advice using a multi-agent system.
+An AI-powered career assistant that analyzes resumes, matches jobs using semantic search (RAG), and provides personalized career advice using a multi-agent system. Implemented LangChain-based AI agent with tool usage and reasoning for a career intelligence system.
 
 ---
 
