@@ -2,6 +2,7 @@ import fitz  # PyMuPDF
 from openai import OpenAI
 import os
 from dotenv import load_dotenv
+from ai_langchain.context import set_user_skills
 
 load_dotenv()
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
@@ -44,6 +45,8 @@ def extract_skills_from_text(text):
 
     skills = [s.strip().lower() for s in skills_text.split(",")]
 
+    set_user_skills(skills)
+     
     return skills
 
 def ai_match_skills(user_skills, job_text):

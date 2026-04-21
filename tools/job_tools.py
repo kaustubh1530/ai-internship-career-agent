@@ -1,85 +1,74 @@
-import json
-import os
-from openai import OpenAI
-from dotenv import load_dotenv
+from langchain.tools import Tool
 
-# Load environment variables
-load_dotenv()
+from backend.agents import resume_agent, advisor_agent
+from backend.search_jobs import search_jobs
 
-client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
-
-
-def load_jobs():
-    with open("data/live_jobs.json", "r") as f:
-        return json.load(f)
+from ai_langchain.context import (
+    get_user_skills,
+    set_jobs,
+    get_jobs
+)
 
 
-def search_jobs(query):
-    jobs = load_jobs()
-    query = query.lower()
+# =========================
+# RESUME TOOL
+# =========================
+def resume_tool_func(_):
+    skills = get_user_skills()
 
-    results = []
+    if not skills:
+        return "No user skills available."
 
-    for job in jobs:
-        title = (job.get("title") or "").lower()
-        location = (job.get("location") or "").lower()
-
-        if any(word in title for word in query.split()) or any(
-            loc in location for loc in ["maryland", "virginia", "washington", "dc"]
-        ):
-            results.append(job)
-
-    return results
+    return resume_agent(skills)
 
 
-def extract_skills_from_description(description):
-    if not description:
-        return []
+# =========================
+# JOB SEARCH TOOL
+# =========================
+def job_search_tool_func(query):
+    jobs = search_jobs(query)
 
-    try:
-        response = client.chat.completions.create(
-            model="gpt-4o-mini",
-            messages=[
-                {
-                    "role": "system",
-                    "content": (
-                        "Extract ONLY technical skills from job descriptions. "
-                        "Return comma-separated values only. No explanations."
-                    )
-                },
-                {
-                    "role": "user",
-                    "content": description[:2000]
-                }
-            ],
-            temperature=0
+    set_jobs(jobs)
+
+    return f"Found {len(jobs)} jobs"
+
+
+# =========================
+# ADVISOR TOOL
+# =========================
+def advisor_tool_func(_):
+    skills = get_user_skills()
+    jobs = get_jobs()
+
+    if not skills or not jobs:
+        return "Missing data for advice."
+
+    job_text = jobs[0].get("description", "")
+
+    return advisor_agent(skills, job_text)
+
+
+# =========================
+# TOOL LIST
+# =========================
+def get_tools():
+
+    tools = [
+        Tool(
+            name="Resume Analyzer",
+            func=resume_tool_func,
+            description="Analyze the user's resume skills"
+        ),
+        Tool(
+            name="Job Search",
+            func=job_search_tool_func,
+            description="Search for jobs ONCE based on a query. Do NOT call this multiple times."
+        ),
+        Tool(
+            name="Career Advisor",
+            func=advisor_tool_func,
+            description="Give career advice using resume and job data"
         )
-
-        text = response.choices[0].message.content
-
-        skills = text.replace("\n", ",").split(",")
-
-        cleaned = [
-            s.strip().lower()
-            for s in skills
-            if s.strip() and 1 < len(s.strip()) < 30
-        ]
-
-        return list(set(cleaned))
-
-    except Exception as e:
-        print("Skill extraction failed:", e)
-        return fallback_skills(description)
-
-
-def fallback_skills(description):
-    keywords = [
-        "python", "sql", "api", "fastapi",
-        "git", "aws", "docker",
-        "machine learning", "data",
-        "communication"
     ]
 
-    desc = description.lower()
-
-    return [k for k in keywords if k in desc]
+    return tools

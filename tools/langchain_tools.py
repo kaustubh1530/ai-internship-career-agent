@@ -1,25 +1,12 @@
 from langchain.tools import Tool
-from backend.agents import resume_agent, job_agent, advisor_agent
+from backend.agents import resume_agent
+from ai_langchain.context import get_user_skills
 
 
-def get_tools():
+def resume_tool_func(_):
+    skills = get_user_skills()
+    
+    if not skills:
+        return "No user skills available."
 
-    tools = [
-        Tool(
-            name="Resume Analyzer",
-            func=lambda x: resume_agent(x.split(",")),
-            description="Analyze user skills and return strengths and weaknesses"
-        ),
-        Tool(
-            name="Job Analyzer",
-            func=job_agent,
-            description="Analyze a job description and extract skills and job type"
-        ),
-        Tool(
-            name="Career Advisor",
-            func=lambda x: advisor_agent(x.split(","), ""),
-            description="Give career advice based on user skills"
-        )
-    ]
-
-    return tools
+    return resume_agent(skills)

@@ -96,7 +96,7 @@ def load_or_create_index():
 # =========================
 # SEARCH FUNCTION
 # =========================
-def search(query, top_k=5):
+def search_jobs(query, top_k=5):
 
     index, jobs = load_or_create_index()
 
