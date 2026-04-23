@@ -23,29 +23,58 @@ def resume_tool_func(_):
 
 
 # =========================
-# JOB SEARCH TOOL
+# JOB SEARCH TOOL (FIXED 🔥)
 # =========================
 def job_search_tool_func(query):
     jobs = search_jobs(query)
 
+    if not jobs:
+        return "No jobs found."
+
+    # Store jobs in shared context
     set_jobs(jobs)
 
-    return f"Found {len(jobs)} jobs"
+    # Return detailed job info (IMPORTANT)
+    result = ""
+
+    for job in jobs[:5]:  # limit to top 5
+        result += f"""
+Title: {job.get('title', 'N/A')}
+Company: {job.get('company', 'N/A')}
+Location: {job.get('location', 'N/A')}
+Description: {job.get('description', '')[:200]}
+Apply Link: {job.get('url', 'N/A')}
+
+------------------------
+"""
+
+    return result
 
 
 # =========================
-# ADVISOR TOOL
+# ADVISOR TOOL (IMPROVED 🔥)
 # =========================
 def advisor_tool_func(_):
     skills = get_user_skills()
     jobs = get_jobs()
 
-    if not skills or not jobs:
-        return "Missing data for advice."
+    if not skills:
+        return "No user skills available."
 
-    job_text = jobs[0].get("description", "")
+    if not jobs:
+        return "No job data available. Please search for jobs first."
 
-    return advisor_agent(skills, job_text)
+    # Combine top jobs into one text
+    combined_jobs = ""
+
+    for job in jobs[:3]:  # use top 3 jobs
+        combined_jobs += f"""
+Title: {job.get('title')}
+Description: {job.get('description', '')[:300]}
+
+"""
+
+    return advisor_agent(skills, combined_jobs)
 
 
 # =========================
@@ -57,17 +86,17 @@ def get_tools():
         Tool(
             name="Resume Analyzer",
             func=resume_tool_func,
-            description="Analyze the user's resume skills"
+            description="Analyze the user's resume skills and identify strengths and weaknesses."
         ),
         Tool(
             name="Job Search",
             func=job_search_tool_func,
-            description="Search for jobs ONCE based on a query. Do NOT call this multiple times."
+            description="Search for jobs based on a role or query and return detailed job listings. Use this when the user asks for jobs."
         ),
         Tool(
             name="Career Advisor",
             func=advisor_tool_func,
-            description="Give career advice using resume and job data"
+            description="Give career advice by comparing user skills with job requirements. Use this after job search."
         )
     ]
 
