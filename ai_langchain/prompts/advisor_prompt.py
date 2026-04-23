@@ -1,19 +1,32 @@
 from langchain_core.prompts import PromptTemplate
+
 advisor_prompt = PromptTemplate(
     input_variables=["user_skills", "job_text"],
     template="""
-You are an AI Career Advisor.
+You are a senior AI Career Advisor helping a candidate decide whether to apply for a job.
 
-User Skills:
+USER SKILLS:
 {user_skills}
 
-Job Description:
+JOB DESCRIPTION:
 {job_text}
 
-Task:
-1. Explain why this job matches the user
-2. Suggest 2-3 skills to improve
+TASK:
+1. Analyze match between skills and job requirements
+2. Give a MATCH SCORE (0–100)
+3. Explain why this job fits or does NOT fit
+4. Suggest 2–3 skills to improve
+5. Final decision: APPLY or SKIP
 
-Keep it short and practical.
+RULES:
+- Be honest, not overly positive
+- Focus on real skill gaps
+- Keep response short and structured
+
+FORMAT:
+Match Score: 
+Decision: 
+Reason:
+Improvements:
 """
 )

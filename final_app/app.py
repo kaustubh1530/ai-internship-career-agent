@@ -39,6 +39,12 @@ st.markdown("""
     border-radius: 12px;
     margin-bottom: 20px;
     border: 1px solid #222;
+    color: #fff;
+    line-height: 1.6;
+}
+.section-title {
+    font-size: 22px;
+    margin-top: 10px;
 }
 </style>
 """, unsafe_allow_html=True)
@@ -51,7 +57,7 @@ st.markdown("AI-powered career assistant with reasoning + tools")
 st.markdown("---")
 
 # ==============================
-# SIDEBAR
+# SIDEBAR (USER INPUT)
 # ==============================
 st.sidebar.header("👤 Your Profile")
 
@@ -60,18 +66,22 @@ skills_input = st.sidebar.text_area(
     placeholder="Python, SQL, FastAPI"
 )
 
-uploaded_file = st.sidebar.file_uploader("Upload Resume (PDF)", type=["pdf"])
+uploaded_file = st.sidebar.file_uploader(
+    "Upload Resume (PDF)", type=["pdf"]
+)
 
 # ==============================
 # SKILLS HANDLING
 # ==============================
-user_skills = [s.strip().lower() for s in skills_input.split(",") if s.strip()]
-
 IGNORE_SKILLS = ["vs code", "postman", "jupyter", "git", "github"]
 
-# ==============================
-# RESUME PROCESSING
-# ==============================
+user_skills = []
+
+# Manual skills
+if skills_input:
+    user_skills = [s.strip().lower() for s in skills_input.split(",") if s.strip()]
+
+# Resume upload overrides manual input
 if uploaded_file:
     with st.sidebar.spinner("📄 Reading resume..."):
         resume_text = extract_text_from_pdf(uploaded_file)
@@ -86,7 +96,7 @@ if uploaded_file:
     st.sidebar.write(", ".join(user_skills))
 
 # ==============================
-# SET CONTEXT (IMPORTANT)
+# SET CONTEXT (CRITICAL)
 # ==============================
 if user_skills:
     set_user_skills(user_skills)
@@ -97,7 +107,11 @@ if user_skills:
 st.markdown("## 👤 Your Profile")
 
 if user_skills:
-    st.success(", ".join(user_skills))
+    st.markdown(f"""
+    <div class="card">
+    {", ".join(user_skills)}
+    </div>
+    """, unsafe_allow_html=True)
 else:
     st.warning("No skills provided")
 
@@ -115,8 +129,16 @@ if user_query:
     with st.spinner("🤖 Thinking..."):
         response = run_smart_agent(user_query)
 
+    # Fix line breaks for HTML
+    formatted_response = response.replace("\n", "<br>")
+
     st.markdown("## 🤖 AI Response")
-    st.success(response)
+
+    st.markdown(f"""
+    <div class="card">
+    {formatted_response}
+    </div>
+    """, unsafe_allow_html=True)
 
 # ==============================
 # FOOTER

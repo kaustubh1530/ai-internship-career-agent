@@ -64,14 +64,18 @@ def advisor_tool_func(_):
     if not jobs:
         return "No job data available. Please search for jobs first."
 
-    # Combine top jobs into one text
     combined_jobs = ""
 
-    for job in jobs[:3]:  # use top 3 jobs
+    for job in jobs[:3]:
         combined_jobs += f"""
 Title: {job.get('title')}
-Description: {job.get('description', '')[:300]}
+Company: {job.get('company')}
+Location: {job.get('location')}
 
+Description:
+{job.get('description', '')[:300]}
+
+---
 """
 
     return advisor_agent(skills, combined_jobs)
