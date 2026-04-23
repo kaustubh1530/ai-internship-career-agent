@@ -1,6 +1,7 @@
 import streamlit as st
 import sys
 import os
+import re
 
 # ==============================
 # FIX PATH
@@ -39,15 +40,45 @@ st.markdown("""
     border-radius: 12px;
     margin-bottom: 20px;
     border: 1px solid #222;
-    color: #fff;
+    color: white;
     line-height: 1.6;
 }
+
+.card a {
+    color: #4da3ff;
+    text-decoration: none;
+}
+
+.card a:hover {
+    text-decoration: underline;
+}
+
 .section-title {
-    font-size: 22px;
-    margin-top: 10px;
+    font-size: 20px;
+    margin-bottom: 10px;
 }
 </style>
 """, unsafe_allow_html=True)
+
+# ==============================
+# HELPERS
+# ==============================
+def format_links(text):
+    # Convert Markdown links → HTML links
+    text = re.sub(
+        r'\[([^\]]+)\]\((https?://[^\)]+)\)',
+        r'<a href="\2" target="_blank">\1</a>',
+        text
+    )
+    return text.replace("\n", "<br>")
+
+
+def format_card(text):
+    return f"""
+    <div class="card">
+    {text}
+    </div>
+    """
 
 # ==============================
 # HEADER
@@ -57,7 +88,7 @@ st.markdown("AI-powered career assistant with reasoning + tools")
 st.markdown("---")
 
 # ==============================
-# SIDEBAR (USER INPUT)
+# SIDEBAR
 # ==============================
 st.sidebar.header("👤 Your Profile")
 
@@ -77,11 +108,11 @@ IGNORE_SKILLS = ["vs code", "postman", "jupyter", "git", "github"]
 
 user_skills = []
 
-# Manual skills
+# Manual input
 if skills_input:
     user_skills = [s.strip().lower() for s in skills_input.split(",") if s.strip()]
 
-# Resume upload overrides manual input
+# Resume override
 if uploaded_file:
     with st.sidebar.spinner("📄 Reading resume..."):
         resume_text = extract_text_from_pdf(uploaded_file)
@@ -96,7 +127,7 @@ if uploaded_file:
     st.sidebar.write(", ".join(user_skills))
 
 # ==============================
-# SET CONTEXT (CRITICAL)
+# SET CONTEXT
 # ==============================
 if user_skills:
     set_user_skills(user_skills)
@@ -107,16 +138,12 @@ if user_skills:
 st.markdown("## 👤 Your Profile")
 
 if user_skills:
-    st.markdown(f"""
-    <div class="card">
-    {", ".join(user_skills)}
-    </div>
-    """, unsafe_allow_html=True)
+    st.markdown(format_card(", ".join(user_skills)), unsafe_allow_html=True)
 else:
     st.warning("No skills provided")
 
 # ==============================
-# AI INTERACTION
+# AI SECTION
 # ==============================
 st.markdown("## 💬 AI Career Assistant")
 
@@ -129,16 +156,12 @@ if user_query:
     with st.spinner("🤖 Thinking..."):
         response = run_smart_agent(user_query)
 
-    # Fix line breaks for HTML
-    formatted_response = response.replace("\n", "<br>")
+    # Format response
+    formatted = format_links(response)
+    final_output = format_card(formatted)
 
     st.markdown("## 🤖 AI Response")
-
-    st.markdown(f"""
-    <div class="card">
-    {formatted_response}
-    </div>
-    """, unsafe_allow_html=True)
+    st.markdown(final_output, unsafe_allow_html=True)
 
 # ==============================
 # FOOTER
