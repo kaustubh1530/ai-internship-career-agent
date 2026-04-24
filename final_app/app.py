@@ -168,3 +168,4 @@ if user_query:
 # ==============================
 st.markdown("---")
 st.caption("🚀 Built by Kaustubh Patil | AI Career Agent")
+

@@ -1,18 +1,37 @@
-from langchain.chains import LLMChain
 from ai_langchain.utils.llm import get_llm
-from ai_langchain.prompts.resume_prompt import resume_prompt
-from ai_langchain.utils.memory import get_memory
+import json
 
-llm = get_llm()
-memory = get_memory()
 
-# CREATE ONCE
-resume_chain = LLMChain(
-    llm=llm,
-    prompt=resume_prompt,
-    memory=memory,
-    verbose=True
-)
+class ResumeChain:
+    def run(self, resume_text):
+
+        client = get_llm()
+
+        prompt = f"""
+Extract skills from this resume.
+
+Return ONLY a JSON list:
+["Python", "FastAPI", "AI"]
+
+Resume:
+{resume_text}
+"""
+
+        response = client.chat.completions.create(
+            model="gpt-4o-mini",
+            messages=[{"role": "user", "content": prompt}],
+            temperature=0.2
+        )
+
+        content = response.choices[0].message.content.strip()
+
+        try:
+            skills = json.loads(content)
+        except:
+            skills = []
+
+        return {"skills": skills}
+
 
 def get_resume_chain():
-    return resume_chain
+    return ResumeChain()
