@@ -1,4 +1,4 @@
-from ai_langchain.smart_agent import run_multi_agent_system
+from smart_agent import run_multi_agent_system
 
 resume_text = "I am a computer science student skilled in Python, FastAPI, and AI."
 

@@ -4,27 +4,25 @@ import os
 import re
 
 # ==============================
-# FIX PATH
+# FIX PATH (IMPORTANT)
 # ==============================
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 # ==============================
-# LANGCHAIN SYSTEM
+# MULTI-AGENT SYSTEM (NEW)
 # ==============================
-from ai_langchain.smart_agent import run_smart_agent
-from ai_langchain.context import set_user_skills
+from smart_agent import run_multi_agent_system
 
 # Backend
 from backend.resume_parser import (
     extract_text_from_pdf,
-    extract_skills_from_text
 )
 
 # ==============================
 # PAGE CONFIG
 # ==============================
 st.set_page_config(
-    page_title="AI Career Agent",
+    page_title="AI Career Intelligence System",
     page_icon="🚀",
     layout="wide"
 )
@@ -64,7 +62,6 @@ st.markdown("""
 # HELPERS
 # ==============================
 def format_links(text):
-    # Convert Markdown links → HTML links
     text = re.sub(
         r'\[([^\]]+)\]\((https?://[^\)]+)\)',
         r'<a href="\2" target="_blank">\1</a>',
@@ -83,89 +80,59 @@ def format_card(text):
 # ==============================
 # HEADER
 # ==============================
-st.title("🚀 AI Career Agent (LangChain Powered)")
-st.markdown("AI-powered career assistant with reasoning + tools")
+st.title("🚀 AI Career Intelligence System")
+st.markdown("Multi-Agent AI System for Jobs, Skills & Career Strategy")
 st.markdown("---")
 
 # ==============================
-# SIDEBAR
+# SIDEBAR (INPUT)
 # ==============================
-st.sidebar.header("👤 Your Profile")
-
-skills_input = st.sidebar.text_area(
-    "Your Skills",
-    placeholder="Python, SQL, FastAPI"
-)
+st.sidebar.header("👤 Upload Resume")
 
 uploaded_file = st.sidebar.file_uploader(
     "Upload Resume (PDF)", type=["pdf"]
 )
 
-# ==============================
-# SKILLS HANDLING
-# ==============================
-IGNORE_SKILLS = ["vs code", "postman", "jupyter", "git", "github"]
+resume_text = None
 
-user_skills = []
-
-# Manual input
-if skills_input:
-    user_skills = [s.strip().lower() for s in skills_input.split(",") if s.strip()]
-
-# Resume override
 if uploaded_file:
     with st.sidebar.spinner("📄 Reading resume..."):
         resume_text = extract_text_from_pdf(uploaded_file)
 
-    with st.sidebar.spinner("🧠 Extracting skills..."):
-        extracted_skills = extract_skills_from_text(resume_text)
-
-    extracted_skills = [s for s in extracted_skills if s not in IGNORE_SKILLS]
-    user_skills = extracted_skills[:10]
-
-    st.sidebar.success("✅ Skills extracted")
-    st.sidebar.write(", ".join(user_skills))
+    st.sidebar.success("✅ Resume loaded")
 
 # ==============================
-# SET CONTEXT
+# MAIN SECTION
 # ==============================
-if user_skills:
-    set_user_skills(user_skills)
+st.markdown("## 🧠 AI Career Analysis")
 
-# ==============================
-# PROFILE DISPLAY
-# ==============================
-st.markdown("## 👤 Your Profile")
+if resume_text:
 
-if user_skills:
-    st.markdown(format_card(", ".join(user_skills)), unsafe_allow_html=True)
+    if st.button("🚀 Run AI Analysis"):
+
+        with st.spinner("🤖 Running multi-agent system..."):
+            result_state = run_multi_agent_system(resume_text)
+
+        # ==============================
+        # FINAL OUTPUT
+        # ==============================
+        st.markdown("## 🎯 Career Recommendations")
+
+        formatted = format_links(result_state.final_answer or "No output generated")
+        st.markdown(format_card(formatted), unsafe_allow_html=True)
+
+        # ==============================
+        # DEBUG LOGS (VERY IMPRESSIVE)
+        # ==============================
+        with st.expander("🧠 View AI System Logs"):
+            for log in result_state.logs:
+                st.write(log)
+
 else:
-    st.warning("No skills provided")
-
-# ==============================
-# AI SECTION
-# ==============================
-st.markdown("## 💬 AI Career Assistant")
-
-user_query = st.text_input(
-    "Ask anything (jobs, skills, career advice)",
-    placeholder="Find backend jobs for me and tell me if I should apply"
-)
-
-if user_query:
-    with st.spinner("🤖 Thinking..."):
-        response = run_smart_agent(user_query)
-
-    # Format response
-    formatted = format_links(response)
-    final_output = format_card(formatted)
-
-    st.markdown("## 🤖 AI Response")
-    st.markdown(final_output, unsafe_allow_html=True)
+    st.warning("Please upload your resume to start")
 
 # ==============================
 # FOOTER
 # ==============================
 st.markdown("---")
-st.caption("🚀 Built by Kaustubh Patil | AI Career Agent")
-
+st.caption("🚀 Built by Kaustubh Patil | Multi-Agent AI Career System")
