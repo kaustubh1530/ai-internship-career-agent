@@ -9,14 +9,12 @@ import re
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 # ==============================
-# MULTI-AGENT SYSTEM (NEW)
+# MULTI-AGENT SYSTEM
 # ==============================
 from smart_agent import run_multi_agent_system
 
 # Backend
-from backend.resume_parser import (
-    extract_text_from_pdf,
-)
+from backend.resume_parser import extract_text_from_pdf
 
 # ==============================
 # PAGE CONFIG
@@ -42,18 +40,22 @@ st.markdown("""
     line-height: 1.6;
 }
 
-.card a {
+.job-card {
+    background-color: #0f172a;
+    padding: 18px;
+    border-radius: 12px;
+    margin-bottom: 15px;
+    border: 1px solid #1e293b;
+    color: white;
+}
+
+a {
     color: #4da3ff;
     text-decoration: none;
 }
 
-.card a:hover {
+a:hover {
     text-decoration: underline;
-}
-
-.section-title {
-    font-size: 20px;
-    margin-bottom: 10px;
 }
 </style>
 """, unsafe_allow_html=True)
@@ -61,7 +63,10 @@ st.markdown("""
 # ==============================
 # HELPERS
 # ==============================
-def format_links(text):
+def format_text(text):
+    if not text:
+        return "No output generated"
+
     text = re.sub(
         r'\[([^\]]+)\]\((https?://[^\)]+)\)',
         r'<a href="\2" target="_blank">\1</a>',
@@ -70,10 +75,17 @@ def format_links(text):
     return text.replace("\n", "<br>")
 
 
-def format_card(text):
+def render_card(text):
+    return f"<div class='card'>{text}</div>"
+
+
+def render_job(job):
     return f"""
-    <div class="card">
-    {text}
+    <div class="job-card">
+        <h3>{job.get('title', 'No Title')}</h3>
+        <p><b>Company:</b> {job.get('company', 'Unknown')}</p>
+        <p><b>Location:</b> {job.get('location', 'Remote')}</p>
+        <a href="{job.get('url', '#')}" target="_blank">🔗 Apply Here</a>
     </div>
     """
 
@@ -85,7 +97,7 @@ st.markdown("Multi-Agent AI System for Jobs, Skills & Career Strategy")
 st.markdown("---")
 
 # ==============================
-# SIDEBAR (INPUT)
+# SIDEBAR
 # ==============================
 st.sidebar.header("👤 Upload Resume")
 
@@ -114,15 +126,32 @@ if resume_text:
             result_state = run_multi_agent_system(resume_text)
 
         # ==============================
-        # FINAL OUTPUT
+        # CAREER ADVICE
         # ==============================
         st.markdown("## 🎯 Career Recommendations")
 
-        formatted = format_links(result_state.final_answer or "No output generated")
-        st.markdown(format_card(formatted), unsafe_allow_html=True)
+        formatted = format_text(result_state.final_answer)
+        st.markdown(render_card(formatted), unsafe_allow_html=True)
 
         # ==============================
-        # DEBUG LOGS (VERY IMPRESSIVE)
+        # JOBS SECTION (🔥 NEW FIX)
+        # ==============================
+        st.markdown("## 💼 Recommended Jobs")
+
+        if hasattr(result_state, "top_jobs") and result_state.top_jobs:
+
+            cols = st.columns(2)
+
+            for i, job in enumerate(result_state.top_jobs):
+
+                with cols[i % 2]:
+                    st.markdown(render_job(job), unsafe_allow_html=True)
+
+        else:
+            st.warning("No jobs available to display yet.")
+
+        # ==============================
+        # LOGS
         # ==============================
         with st.expander("🧠 View AI System Logs"):
             for log in result_state.logs:

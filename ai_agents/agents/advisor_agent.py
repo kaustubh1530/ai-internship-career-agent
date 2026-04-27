@@ -8,11 +8,13 @@ class AdvisorAgent(BaseAgent):
         super().__init__("AdvisorAgent")
 
     def run(self, state: AgentState) -> AgentState:
-        """
-        Generates career recommendations based on:
-        - User resume
-        - Top matched jobs (after scoring)
-        """
+
+        # -------------------------
+        # READ MESSAGES
+        # -------------------------
+        for msg in state.messages:
+            if msg.get("to") == self.name:
+                self.log(state, f"Received message: {msg.get('content')}")
 
         # -------------------------
         # SAFETY CHECK
@@ -22,7 +24,7 @@ class AdvisorAgent(BaseAgent):
             return state
 
         # -------------------------
-        # RUN LLM CHAIN
+        # RUN CHAIN
         # -------------------------
         chain = get_advisor_chain()
 
@@ -31,6 +33,7 @@ class AdvisorAgent(BaseAgent):
             jobs=state.top_jobs,
             skills=state.extracted_skills
         )
+
         # -------------------------
         # STORE OUTPUT
         # -------------------------
@@ -38,7 +41,7 @@ class AdvisorAgent(BaseAgent):
         state.final_answer = result.get("summary", "")
 
         # -------------------------
-        # LOGGING
+        # LOG
         # -------------------------
         self.log(
             state,

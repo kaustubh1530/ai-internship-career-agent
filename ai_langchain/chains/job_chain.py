@@ -1,40 +1,37 @@
-from ai_langchain.utils.llm import get_llm
-import json
+from langchain_openai import ChatOpenAI
 
 
 class JobChain:
-    def run(self, skills):
-
-        client = get_llm()
-
-        prompt = f"""
-Match jobs for these skills:
-{skills}
-
-Return ONLY JSON:
-[
-  {{
-    "title": "Software Engineer Intern",
-    "company": "Google",
-    "match_score": 90
-  }}
-]
-"""
-
-        response = client.chat.completions.create(
-            model="gpt-4o-mini",
-            messages=[{"role": "user", "content": prompt}],
-            temperature=0.2
+    def __init__(self):
+        self.llm = ChatOpenAI(
+            temperature=0.3,
+            model="gpt-4o-mini"
         )
 
-        content = response.choices[0].message.content.strip()
+    def run(self, skills):
 
-        try:
-            jobs = json.loads(content)
-        except:
-            jobs = []
+        prompt = f"""
+        Given these skills:
+        {skills}
 
-        return {"jobs": jobs}
+        Suggest relevant software engineering jobs.
+
+        Return as a simple list of job roles with short descriptions.
+        """
+
+        response = self.llm.invoke(prompt)
+
+        content = response.content
+
+        # basic parsing fallback
+        jobs = [
+            {"title": line.strip(), "description": line.strip()}
+            for line in content.split("\n") if line.strip()
+        ]
+
+        return {
+            "jobs": jobs
+        }
 
 
 def get_job_chain():

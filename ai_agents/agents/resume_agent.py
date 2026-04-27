@@ -9,9 +9,18 @@ class ResumeAgent(BaseAgent):
 
     def run(self, state: AgentState) -> AgentState:
         chain = get_resume_chain()
+
         result = chain.run(resume_text=state.resume_text)
 
         state.extracted_skills = result.get("skills", [])
+
         self.log(state, f"Extracted skills: {state.extracted_skills}")
+
+        # 🔥 SEND MESSAGE TO JOB AGENT
+        state.add_message(
+            sender=self.name,
+            receiver="JobAgent",
+            content=f"User skills: {state.extracted_skills}"
+        )
 
         return state

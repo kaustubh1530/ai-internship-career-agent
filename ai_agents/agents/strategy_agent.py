@@ -9,6 +9,12 @@ class StrategyAgent(BaseAgent):
         self.llm = get_llm()
 
     def run(self, state: AgentState) -> AgentState:
+
+        # READ MESSAGES
+        for msg in state.messages:
+            if msg.get("to") == self.name:
+                self.log(state, f"Received message: {msg.get('content')}")
+
         prompt = f"""
         The user has the following skills:
         {state.extracted_skills}
@@ -21,15 +27,11 @@ class StrategyAgent(BaseAgent):
         3. How to become job-ready
         """
 
-        response = self.llm.chat.completions.create(
-            model="gpt-4o-mini",  # or whatever you're using
-            messages=[
-                {"role": "user", "content": prompt}
-            ]
-        )
+        # ✅ NOW THIS WILL WORK
+        response = self.llm.invoke(prompt)
 
-        state.final_answer = response.choices[0].message.content
+        state.final_answer = response.content
 
-        self.log(state, "Generated long-term strategy (no jobs scenario)")
+        self.log(state, "Generated long-term strategy")
 
         return state

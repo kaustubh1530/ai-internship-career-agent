@@ -1,36 +1,34 @@
-from ai_langchain.utils.llm import get_llm
-import json
+from langchain_openai import ChatOpenAI
 
 
 class ResumeChain:
-    def run(self, resume_text):
-
-        client = get_llm()
-
-        prompt = f"""
-Extract skills from this resume.
-
-Return ONLY a JSON list:
-["Python", "FastAPI", "AI"]
-
-Resume:
-{resume_text}
-"""
-
-        response = client.chat.completions.create(
-            model="gpt-4o-mini",
-            messages=[{"role": "user", "content": prompt}],
-            temperature=0.2
+    def __init__(self):
+        self.llm = ChatOpenAI(
+            temperature=0.3,
+            model="gpt-4o-mini"
         )
 
-        content = response.choices[0].message.content.strip()
+    def run(self, resume_text: str):
 
-        try:
-            skills = json.loads(content)
-        except:
-            skills = []
+        prompt = f"""
+        Extract skills from this resume:
 
-        return {"skills": skills}
+        {resume_text}
+
+        Return ONLY a list of skills.
+        """
+
+        response = self.llm.invoke(prompt)
+
+        # Simple parsing (safe fallback)
+        skills_text = response.content
+
+        # Convert string → list (basic cleanup)
+        skills = [s.strip() for s in skills_text.replace("\n", ",").split(",") if s.strip()]
+
+        return {
+            "skills": skills
+        }
 
 
 def get_resume_chain():

@@ -1,42 +1,40 @@
-from ai_langchain.utils.llm import get_llm
-import json
+from langchain_openai import ChatOpenAI
 
 
 class AdvisorChain:
-    def run(self, resume, jobs):
-
-        client = get_llm()
-
-        prompt = f"""
-You are a career advisor.
-
-Resume:
-{resume}
-
-Jobs:
-{jobs}
-
-Return JSON:
-{{
-  "recommendations": ["improve Python", "learn system design"],
-  "summary": "short advice"
-}}
-"""
-
-        response = client.chat.completions.create(
-            model="gpt-4o-mini",
-            messages=[{"role": "user", "content": prompt}],
-            temperature=0.3
+    def __init__(self):
+        self.llm = ChatOpenAI(
+            temperature=0.3,
+            model="gpt-4o-mini"
         )
 
-        content = response.choices[0].message.content.strip()
+    def run(self, resume, jobs, skills):
 
-        try:
-            result = json.loads(content)
-        except:
-            result = {"recommendations": [], "summary": content}
+        prompt = f"""
+        You are a career advisor AI.
 
-        return result
+        Resume:
+        {resume}
+
+        Skills:
+        {skills}
+
+        Jobs:
+        {jobs}
+
+        Provide:
+        - Career recommendations
+        - Skill improvements
+        - Best job path
+        - Summary
+        """
+
+        response = self.llm.invoke(prompt)
+
+        return {
+            "recommendations": [response.content],
+            "summary": response.content
+        }
 
 
 def get_advisor_chain():
