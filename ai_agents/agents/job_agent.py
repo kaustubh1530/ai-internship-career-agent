@@ -1,8 +1,6 @@
 from ai_agents.base import BaseAgent
 from ai_agents.state import AgentState
-
-from backend.search_jobs import search_jobs  # ✅ REAL JOB SYSTEM
-from tools.scoring_tool import score_jobs
+from backend.job_data_source import load_jobs
 
 
 class JobAgent(BaseAgent):
@@ -11,64 +9,55 @@ class JobAgent(BaseAgent):
 
     def run(self, state: AgentState) -> AgentState:
 
-        # -------------------------
-        # READ MESSAGES
-        # -------------------------
-        for msg in state.messages:
-            if msg["to"] == "JobAgent":
-                self.log(state, f"Received message: {msg['content']}")
+        all_jobs = load_jobs()
+        self.log(state, f"Loaded {len(all_jobs)} jobs from data source")
 
-        # -------------------------
-        # BUILD QUERY FROM SKILLS
-        # -------------------------
-        if not state.extracted_skills:
-            query = "software engineer"
-        else:
-            query = " ".join(state.extracted_skills[:5])
+        user_skills = state.extracted_skills or []
+        matched_jobs = []
 
-        self.log(state, f"Searching jobs for: {query}")
+        self.log(state, f"User skills: {user_skills}")
 
-        # -------------------------
-        # 🔥 REAL JOB SEARCH
-        # -------------------------
-        jobs = search_jobs(query, top_k=10)
+        for job in all_jobs:
 
-        if not jobs:
-            state.has_jobs = False
-            state.needs_strategy = True
+            # 🔥 Combine ALL job text
+            job_text = (
+                job.get("title", "") + " " +
+                job.get("description", "")
+            ).lower()
 
-            self.log(state, "No jobs found → switching to strategy mode")
+            score = 0
 
-            state.add_message(
-                sender=self.name,
-                receiver="StrategyAgent",
-                content="No jobs found for current skill set"
-            )
+            # 🔥 Flexible matching
+            for skill in user_skills:
+                if skill in job_text:
+                    score += 1
 
-            return state
+            # 🔥 Fallback: if nothing matches, still give base score
+            if score == 0:
+                if "software" in job_text or "engineer" in job_text:
+                    score = 1  # fallback relevance
 
-        self.log(state, f"Fetched {len(jobs)} real jobs")
+            job["score"] = score
 
-        # -------------------------
-        # SCORE JOBS
-        # -------------------------
-        scored = score_jobs(jobs, state.extracted_skills)
-        state.match_scores = scored
+            self.log(state, f"{job.get('title')} → score: {score}")
 
-        # -------------------------
-        # SELECT TOP JOBS
-        # -------------------------
-        state.top_jobs = [item["job"] for item in scored[:5]]
+            matched_jobs.append(job)
 
-        state.has_jobs = True
+        # 🔥 SORT ALL JOBS (even low score)
+        matched_jobs = sorted(
+            matched_jobs,
+            key=lambda x: x["score"],
+            reverse=True
+        )
+
+        # 🔥 ALWAYS RETURN TOP JOBS (CRITICAL FIX)
+        state.top_jobs = matched_jobs[:5]
 
         self.log(state, f"Top {len(state.top_jobs)} jobs selected")
 
-        # -------------------------
-        # SEND MESSAGE
-        # -------------------------
+        # MESSAGE PASSING
         state.add_message(
-            sender=self.name,
+            sender="JobAgent",
             receiver="AdvisorAgent",
             content=f"Top jobs ready: {len(state.top_jobs)}"
         )

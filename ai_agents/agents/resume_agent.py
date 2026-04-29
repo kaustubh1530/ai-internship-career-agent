@@ -12,11 +12,20 @@ class ResumeAgent(BaseAgent):
 
         result = chain.run(resume_text=state.resume_text)
 
-        state.extracted_skills = result.get("skills", [])
+        raw_skills = result.get("skills", [])
+
+        # ✅ CLEAN SKILLS (VERY IMPORTANT)
+        cleaned_skills = [
+            skill.replace("-", "").strip().lower()
+            for skill in raw_skills
+            if skill.strip()
+        ]
+
+        state.extracted_skills = cleaned_skills
 
         self.log(state, f"Extracted skills: {state.extracted_skills}")
 
-        # 🔥 SEND MESSAGE TO JOB AGENT
+        # ✅ SEND MESSAGE
         state.add_message(
             sender=self.name,
             receiver="JobAgent",

@@ -3,31 +3,23 @@ import sys
 import os
 import re
 
-# ==============================
 # FIX PATH (IMPORTANT)
-# ==============================
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-# ==============================
 # MULTI-AGENT SYSTEM
-# ==============================
 from smart_agent import run_multi_agent_system
 
 # Backend
 from backend.resume_parser import extract_text_from_pdf
 
-# ==============================
 # PAGE CONFIG
-# ==============================
 st.set_page_config(
     page_title="AI Career Intelligence System",
     page_icon="🚀",
     layout="wide"
 )
 
-# ==============================
 # UI STYLE
-# ==============================
 st.markdown("""
 <style>
 .card {
@@ -60,9 +52,7 @@ a:hover {
 </style>
 """, unsafe_allow_html=True)
 
-# ==============================
 # HELPERS
-# ==============================
 def format_text(text):
     if not text:
         return "No output generated"
@@ -82,31 +72,23 @@ def render_card(text):
 def render_job(job):
     url = job.get("url")
 
-    apply_button = (
-        f'<a href="{url}" target="_blank">🔗 Apply Here</a>'
-        if url and url != "#"
-        else "<p style='color: gray;'>No application link available</p>"
-    )
-
     return f"""
     <div class="job-card">
-        <h3>{job.get('title', 'No Title')}</h3>
-        <p><b>Company:</b> {job.get('company', 'Unknown')}</p>
-        <p><b>Location:</b> {job.get('location', 'Remote')}</p>
-        {apply_button}
+        <h3>{job.get('title')}</h3>
+        <p><b>Company:</b> {job.get('company')}</p>
+        <p><b>Location:</b> {job.get('location')}</p>
+        <p><b>Match Score:</b> {job.get('score', 0)}</p>
+        <a href="{url}" target="_blank">🔗 Apply Here</a>
     </div>
     """
 
-# ==============================
 # HEADER
-# ==============================
+
 st.title("🚀 AI Career Intelligence System")
 st.markdown("Multi-Agent AI System for Jobs, Skills & Career Strategy")
 st.markdown("---")
 
-# ==============================
 # SIDEBAR
-# ==============================
 st.sidebar.header("👤 Upload Resume")
 
 uploaded_file = st.sidebar.file_uploader(
@@ -121,9 +103,7 @@ if uploaded_file:
 
     st.sidebar.success("✅ Resume loaded")
 
-# ==============================
 # MAIN SECTION
-# ==============================
 st.markdown("## 🧠 AI Career Analysis")
 
 if resume_text:
@@ -133,17 +113,13 @@ if resume_text:
         with st.spinner("🤖 Running multi-agent system..."):
             result_state = run_multi_agent_system(resume_text)
 
-        # ==============================
         # CAREER ADVICE
-        # ==============================
         st.markdown("## 🎯 Career Recommendations")
 
         formatted = format_text(result_state.final_answer)
         st.markdown(render_card(formatted), unsafe_allow_html=True)
 
-        # ==============================
         # JOBS SECTION (🔥 NEW FIX)
-        # ==============================
         st.markdown("## 💼 Recommended Jobs")
 
         if hasattr(result_state, "top_jobs") and result_state.top_jobs:
@@ -158,9 +134,7 @@ if resume_text:
         else:
             st.warning("No jobs available to display yet.")
 
-        # ==============================
         # LOGS
-        # ==============================
         with st.expander("🧠 View AI System Logs"):
             for log in result_state.logs:
                 st.write(log)
@@ -168,8 +142,6 @@ if resume_text:
 else:
     st.warning("Please upload your resume to start")
 
-# ==============================
 # FOOTER
-# ==============================
 st.markdown("---")
 st.caption("🚀 Built by Kaustubh Patil | Multi-Agent AI Career System")
