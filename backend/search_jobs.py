@@ -126,7 +126,7 @@ def search_jobs(query, top_k=5):
 # =========================
 if __name__ == "__main__":
     q = input("Search: ")
-    res = search(q)
+    res = search_jobs(q)
 
     for r in res:
-        print(r["title"], r.get("company", ""))
+        print(r.get("title"), r.get("company"), r.get("url"))

@@ -34,3 +34,10 @@ class AgentState:
         }
         self.messages.append(msg)
         self.logs.append(f"[MESSAGE] {sender} → {receiver}: {content}")
+
+    # Feedback system
+    feedback: dict = field(default_factory=dict)
+
+    # Iteration control
+    iteration_count: int = 0
+    max_iterations: int = 2

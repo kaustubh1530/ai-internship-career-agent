@@ -80,12 +80,20 @@ def render_card(text):
 
 
 def render_job(job):
+    url = job.get("url")
+
+    apply_button = (
+        f'<a href="{url}" target="_blank">🔗 Apply Here</a>'
+        if url and url != "#"
+        else "<p style='color: gray;'>No application link available</p>"
+    )
+
     return f"""
     <div class="job-card">
         <h3>{job.get('title', 'No Title')}</h3>
         <p><b>Company:</b> {job.get('company', 'Unknown')}</p>
         <p><b>Location:</b> {job.get('location', 'Remote')}</p>
-        <a href="{job.get('url', '#')}" target="_blank">🔗 Apply Here</a>
+        {apply_button}
     </div>
     """
 
