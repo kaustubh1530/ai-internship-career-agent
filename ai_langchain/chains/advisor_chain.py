@@ -1,4 +1,5 @@
 from langchain_openai import ChatOpenAI
+from ai_langchain.prompts.advisor_prompt import advisor_prompt
 
 
 class AdvisorChain:
@@ -8,29 +9,33 @@ class AdvisorChain:
             model="gpt-4o-mini"
         )
 
-    def run(self, resume, jobs, skills):
+    def run(self, resume, jobs, skills, history):
 
-        prompt = f"""
-        You are a career advisor AI.
+        # FORMAT INPUTS CLEANLY
+        jobs_text = "\n\n".join([
+            f"- {job.get('title')} at {job.get('company')} ({job.get('location')})"
+            for job in jobs
+        ]) if jobs else "No jobs available"
 
-        Resume:
-        {resume}
+        history_text = "\n".join([
+            f"Past Skills: {h.get('skills')}, Jobs: {h.get('top_jobs')}"
+            for h in history
+        ]) if history else "No past history"
 
-        Skills:
-        {skills}
+        skills_text = ", ".join(skills) if skills else "No skills extracted"
 
-        Jobs:
-        {jobs}
+        # BUILD PROMPT
+        prompt = advisor_prompt.format(
+            resume=resume,
+            jobs=jobs_text,
+            skills=skills_text,
+            history=history_text
+        )
 
-        Provide:
-        - Career recommendations
-        - Skill improvements
-        - Best job path
-        - Summary
-        """
-
+        # LLM CALL
         response = self.llm.invoke(prompt)
 
+        # RETURN STRUCTURED OUTPUT
         return {
             "recommendations": [response.content],
             "summary": response.content
