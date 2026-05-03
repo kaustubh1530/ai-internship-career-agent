@@ -51,6 +51,63 @@
         "jobs_quality": "good",
         "skills_quality": "good"
       }
+    },
+    {
+      "skills": [
+        "fullstack development",
+        "system integration",
+        "code quality",
+        "unit testing",
+        "restful apis",
+        "programming languages: python",
+        "java",
+        "javascript",
+        "html",
+        "css",
+        "databases: sqlite",
+        "postgresql",
+        "json",
+        "vector databases",
+        "backend development: fastapi",
+        "flask",
+        "ai technologies: openai apis",
+        "rag",
+        "faiss",
+        "langchain",
+        "vector embeddings",
+        "tools: git",
+        "github",
+        "postman",
+        "vs code",
+        "streamlit",
+        "jupyter",
+        "objectoriented programming (oop)",
+        "semantic search",
+        "agile methodologies",
+        "data structures",
+        "database design",
+        "system architecture",
+        "document ingestion and processing",
+        "vector search and retrieval",
+        "aipowered insights",
+        "rest api development",
+        "data extraction and validation",
+        "prompt engineering",
+        "modular architecture",
+        "ats optimization"
+      ],
+      "top_jobs": [
+        "Software Engineering Intern - Remote Job",
+        "Software Engineering Intern - Remote Job",
+        "Software Engineering Intern - Remote Job",
+        "Software Engineering Intern - Remote Job",
+        "Software Engineering Intern - Remote Job"
+      ],
+      "feedback": {
+        "decision": "accept",
+        "job_quality": "good",
+        "recommendation_quality": "good"
+      }
     }
   ]
 }

@@ -1,11 +1,12 @@
 from ai_agents.state import AgentState
+from ai_agents.agents.decision_agent import DecisionAgent
 
 
 class AgentOrchestrator:
     def __init__(self, agents):
         self.agents = agents
 
-    def run(self, state):
+    def run(self, state: AgentState):
 
         state.add_log("🚀 Starting intelligent multi-agent system")
 
@@ -13,41 +14,35 @@ class AgentOrchestrator:
 
             state.add_log(f"🔁 Iteration {state.iteration_count + 1}")
 
-            # -------------------------
             # RUN MAIN AGENTS
-            # -------------------------
             for agent in self.agents:
                 state = agent.run(state)
 
-            # -------------------------
-            # RUN FEEDBACK AGENT
-            # -------------------------
-            from ai_agents.agents.feedback_agent import FeedbackAgent
+            # DECISION AGENT
+            decision_agent = DecisionAgent()
+            state = decision_agent.run(state)
 
-            feedback_agent = FeedbackAgent()
-            state = feedback_agent.run(state)
-
-            # -------------------------
             # DECISION: SHOULD WE STOP?
-            # -------------------------
-            jobs_quality = state.feedback.get("jobs_quality", "unknown")
+            decision = state.feedback.get("decision", "retry")
 
-            if jobs_quality == "good":
-                state.add_log("✅ Jobs are good → stopping iterations")
+            if decision == "accept":
+                state.add_log("✅ Decision accepted → stopping iterations")
                 break
 
-            # -------------------------
-            # IMPROVEMENT STEP
-            # -------------------------
+            # IMPROVEMENT STEP (SMART RETRY)
             state.add_log("⚠️ Improving system for next iteration")
 
-            # Simple refinement strategy
+            # 🔥 Smarter refinement strategy
             if state.extracted_skills:
-                state.extracted_skills = state.extracted_skills[:3]
+                state.add_log("🔧 Refining skills for better matching")
 
-            # -------------------------
+                state.extracted_skills = [
+                    skill.strip().lower()
+                    for skill in state.extracted_skills
+                    if len(skill.strip()) > 3
+                ][:5]
+
             # INCREMENT ITERATION
-            # -------------------------
             state.iteration_count += 1
 
         state.add_log("✅ Intelligent pipeline completed")
