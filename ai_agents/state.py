@@ -5,6 +5,9 @@ from typing import List, Dict, Any, Optional
 @dataclass
 class AgentState:
     resume_text: Optional[str] = None
+    role_filter: Optional[str] = None
+    location_filter: Optional[str] = None
+    top_n: int = 5
 
     extracted_skills: List[str] = field(default_factory=list)
     jobs: List[Dict[str, Any]] = field(default_factory=list)

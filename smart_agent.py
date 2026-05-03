@@ -11,13 +11,16 @@ from ai_agents.agents.strategy_agent import StrategyAgent
 from backend.memory_utils import add_memory_entry
 
 
-def run_multi_agent_system(resume_text: str) -> AgentState:
+def run_multi_agent_system(resume_text: str, role=None, location=None, top_n=5) -> AgentState:
 
     # 1. INITIALIZE STATE
     state = AgentState()
     state.resume_text = resume_text
     state.add_log("📄 Resume received")
-
+    state.role_filter = role
+    state.location_filter = location
+    state.top_n = top_n
+    
     # 2. PIPELINE
     orchestrator = AgentOrchestrator([
         ResumeAgent(),

@@ -108,6 +108,51 @@
         "job_quality": "good",
         "recommendation_quality": "good"
       }
+    },
+    {
+      "skills": [
+        "fullstack development",
+        "system integration",
+        "code quality",
+        "unit testing",
+        "restful apis"
+      ],
+      "top_jobs": [],
+      "feedback": {
+        "decision": "retry",
+        "job_quality": "bad",
+        "recommendation_quality": "good"
+      }
+    },
+    {
+      "skills": [
+        "fullstack development",
+        "system integration",
+        "code quality",
+        "unit testing",
+        "restful apis"
+      ],
+      "top_jobs": [],
+      "feedback": {
+        "decision": "retry",
+        "job_quality": "bad",
+        "recommendation_quality": "good"
+      }
+    },
+    {
+      "skills": [
+        "fullstack development",
+        "system integration",
+        "code quality",
+        "unit testing",
+        "restful apis"
+      ],
+      "top_jobs": [],
+      "feedback": {
+        "decision": "retry",
+        "job_quality": "bad",
+        "recommendation_quality": "good"
+      }
     }
   ]
 }
