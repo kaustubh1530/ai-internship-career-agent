@@ -1,28 +1,53 @@
 import json
+import os
+import sys
+
+# ==============================
+# FIX PROJECT ROOT PATH
+# ==============================
+PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.append(PROJECT_ROOT)
+
 from backend.job_data_source import load_jobs
 from backend.embedding_utils import get_embedding
+
+
+OUTPUT_FILE = os.path.join(PROJECT_ROOT, "backend", "job_embeddings.json")
+
+
+def build_job_text(job):
+    """
+    Build clean searchable text for each job.
+    """
+    title = job.get("title", "")
+    company = job.get("company", "")
+    location = job.get("location", "")
+    description = job.get("description", "")
+
+    return f"{title}\n{company}\n{location}\n{description}"
 
 
 def build_embeddings():
     jobs = load_jobs()
 
+    if not jobs:
+        print("No jobs found in data/live_jobs.json")
+        return
+
     embedded_jobs = []
 
-    for job in jobs:
-        text = job.get("title", "") + " " + job.get("description", "")
+    for index, job in enumerate(jobs, start=1):
+        job_text = build_job_text(job)
 
-        embedding = get_embedding(text)
+        print(f"Processing {index}/{len(jobs)}: {job.get('title', 'Untitled Job')}")
 
-        job["embedding"] = embedding
-
+        job["embedding"] = get_embedding(job_text)
         embedded_jobs.append(job)
 
-        print(f"Processed: {job.get('title')}")
+    with open(OUTPUT_FILE, "w", encoding="utf-8") as file:
+        json.dump(embedded_jobs, file, indent=2)
 
-    with open("backend/job_embeddings.json", "w") as f:
-        json.dump(embedded_jobs, f)
-
-    print("✅ Job embeddings saved!")
+    print(f"✅ Saved {len(embedded_jobs)} embedded jobs to {OUTPUT_FILE}")
 
 
 if __name__ == "__main__":
