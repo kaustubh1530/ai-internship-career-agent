@@ -1,5 +1,4 @@
 from langchain_openai import ChatOpenAI
-from ai_langchain.prompts.advisor_prompt import advisor_prompt
 
 
 class AdvisorChain:
@@ -9,33 +8,70 @@ class AdvisorChain:
             model="gpt-4o-mini"
         )
 
-    def run(self, resume, jobs, skills, history):
+    def run(self, resume, jobs, skills, history=None):
 
-        # FORMAT INPUTS CLEANLY
+        # -------------------------
+        # 🔥 PERFORMANCE FIXES
+        # -------------------------
+        resume = (resume or "")[:1500]
+        jobs = jobs[:5]
+        skills = skills[:20]
+
+        history = history or []
+        history = history[-2:]
+
+        # -------------------------
+        # FORMAT JOBS
+        # -------------------------
         jobs_text = "\n\n".join([
-            f"- {job.get('title')} at {job.get('company')} ({job.get('location')})"
+            f"{job.get('title')} at {job.get('company')}"
             for job in jobs
-        ]) if jobs else "No jobs available"
+        ])
 
+        # -------------------------
+        # FORMAT HISTORY
+        # -------------------------
         history_text = "\n".join([
-            f"Past Skills: {h.get('skills')}, Jobs: {h.get('top_jobs')}"
+            f"Skills: {h.get('skills')}, Jobs: {h.get('top_jobs')}"
             for h in history
-        ]) if history else "No past history"
+        ]) if history else "No previous history"
 
-        skills_text = ", ".join(skills) if skills else "No skills extracted"
+        # -------------------------
+        # PROMPT
+        # -------------------------
+        prompt = f"""
+You are an expert AI Career Advisor.
 
-        # BUILD PROMPT
-        prompt = advisor_prompt.format(
-            resume=resume,
-            jobs=jobs_text,
-            skills=skills_text,
-            history=history_text
-        )
+USER RESUME:
+{resume}
 
+USER SKILLS:
+{skills}
+
+TOP JOB MATCHES:
+{jobs_text}
+
+PAST HISTORY:
+{history_text}
+
+TASK:
+1. Recommend best career direction
+2. Suggest skill improvements
+3. Suggest best job roles
+4. Keep response structured and concise
+
+FORMAT:
+- Career Recommendations
+- Skills to Improve
+- Best Job Path
+- Summary
+"""
+
+        # -------------------------
         # LLM CALL
+        # -------------------------
         response = self.llm.invoke(prompt)
 
-        # RETURN STRUCTURED OUTPUT
         return {
             "recommendations": [response.content],
             "summary": response.content

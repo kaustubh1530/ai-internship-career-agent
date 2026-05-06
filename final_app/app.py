@@ -88,12 +88,20 @@ if resume_text:
         # JOBS DISPLAY
         st.markdown("## 💼 Top Job Matches")
 
-        if result.top_jobs and len(result.top_jobs) > 0:
-            for job in result.top_jobs:
-                st.markdown(job_card(job), unsafe_allow_html=True)
-        else:
-            st.info("Showing fallback recommendations (no strong matches found)")
+        if result.top_jobs:
 
+            for job in result.top_jobs:
+                st.markdown(f"""
+                <div class="card">
+                    <h4>{job.get("title")}</h4>
+                    <p><b>{job.get("company")}</b> — {job.get("location")}</p>
+                    <p>Match Score: {job.get("score")}</p>
+                    <a href="{job.get("url")}" target="_blank">Apply Here</a>
+                </div>
+                """, unsafe_allow_html=True)
+
+        else:
+            st.error("Something went wrong — no jobs found")
         # AI OUTPUT
         st.markdown("## 🎯 Career Recommendations")
 
