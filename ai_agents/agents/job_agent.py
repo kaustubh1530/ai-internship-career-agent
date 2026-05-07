@@ -122,6 +122,31 @@ Resume:
 
         return list(unique_jobs.values()), fallback_jobs
 
+    def get_match_level(self, percentage):
+        """
+        Convert percentage into a human-readable match level.
+        """
+        if percentage >= 80:
+            return "Strong Match"
+        if percentage >= 60:
+            return "Good Match"
+        if percentage >= 40:
+            return "Moderate Match"
+        return "Learning Match"
+
+    def build_match_reason(self, matched_skills, semantic_score):
+        """
+        Build a short explanation for why the job matched.
+        """
+        if matched_skills:
+            skills_preview = ", ".join(matched_skills[:5])
+            return f"Matched based on skills such as {skills_preview} and overall resume similarity."
+
+        if semantic_score >= 0.70:
+            return "Matched because the job description is semantically close to your resume and project experience."
+
+        return "Included as a related opportunity based on software engineering internship relevance."
+
     def run(self, state: AgentState) -> AgentState:
         all_jobs = self.load_jobs_with_embeddings()
 
@@ -176,10 +201,19 @@ Resume:
                 + filter_boost
             )
 
+            # Normalize final score to a user-friendly percentage.
+            match_percentage = max(0, min(100, round(final_score)))
+
             job["semantic_score"] = round(float(semantic_score), 3)
             job["skill_score"] = skill_score
             job["matched_skills"] = matched_skills
             job["score"] = round(float(final_score), 2)
+            job["match_percentage"] = match_percentage
+            job["match_level"] = self.get_match_level(match_percentage)
+            job["match_reason"] = self.build_match_reason(
+                matched_skills=matched_skills,
+                semantic_score=semantic_score
+            )
 
             scored_jobs.append(job)
 
@@ -197,31 +231,29 @@ Resume:
 
         selected_jobs = unique_jobs[:target_count]
 
-        # If there are not enough unique jobs, fill with fallback duplicates.
         if len(selected_jobs) < target_count:
             needed = target_count - len(selected_jobs)
             selected_jobs.extend(fallback_duplicates[:needed])
 
         state.top_jobs = selected_jobs
-
         state.has_jobs = len(state.top_jobs) > 0
         state.needs_strategy = not state.has_jobs
 
         self.log(
             state,
-            f"Returning {len(state.top_jobs)} diversified semantic job matches"
+            f"Returning {len(state.top_jobs)} explainable semantic job matches"
         )
 
         for job in state.top_jobs:
             self.log(
                 state,
-                f"Selected: {job.get('title')} at {job.get('company')} | score={job.get('score')}"
+                f"Selected: {job.get('title')} at {job.get('company')} | match={job.get('match_percentage')}%"
             )
 
         state.add_message(
             sender=self.name,
             receiver="AdvisorAgent",
-            content=f"Diversified semantic job matches ready: {len(state.top_jobs)}"
+            content=f"Explainable semantic job matches ready: {len(state.top_jobs)}"
         )
 
         return state
