@@ -6,7 +6,9 @@ import sys
 # FIX PROJECT ROOT PATH
 # ==============================
 PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-sys.path.append(PROJECT_ROOT)
+
+if PROJECT_ROOT not in sys.path:
+    sys.path.append(PROJECT_ROOT)
 
 from backend.job_data_source import load_jobs
 from backend.embedding_utils import get_embedding
@@ -19,6 +21,7 @@ def build_job_text(job):
     """
     Build clean searchable text for each job.
     """
+
     title = job.get("title", "")
     company = job.get("company", "")
     location = job.get("location", "")
@@ -28,11 +31,16 @@ def build_job_text(job):
 
 
 def build_embeddings():
+    """
+    Build embeddings for all jobs in data/live_jobs.json
+    and save them to backend/job_embeddings.json.
+    """
+
     jobs = load_jobs()
 
     if not jobs:
         print("No jobs found in data/live_jobs.json")
-        return
+        return []
 
     embedded_jobs = []
 
@@ -48,6 +56,8 @@ def build_embeddings():
         json.dump(embedded_jobs, file, indent=2)
 
     print(f"✅ Saved {len(embedded_jobs)} embedded jobs to {OUTPUT_FILE}")
+
+    return embedded_jobs
 
 
 if __name__ == "__main__":

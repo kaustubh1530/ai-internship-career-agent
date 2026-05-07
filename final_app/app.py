@@ -10,6 +10,8 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from smart_agent import run_multi_agent_system
 from backend.resume_parser import extract_text_from_pdf
+from backend.live_job_fetcher import fetch_live_jobs
+from backend.build_job_embeddings import build_embeddings
 
 # ==============================
 # PAGE CONFIG
@@ -35,14 +37,6 @@ st.markdown("""
     color: #9ca3af;
     font-size: 18px;
     margin-bottom: 25px;
-}
-
-.metric-card {
-    background-color: #111827;
-    border: 1px solid #1f2937;
-    border-radius: 16px;
-    padding: 18px;
-    margin-bottom: 16px;
 }
 
 .skill-pill {
@@ -90,6 +84,7 @@ def render_skill_pills(skills):
         return
 
     pills_html = ""
+
     for skill in skills[:8]:
         pills_html += f"<span class='skill-pill'>{skill}</span>"
 
@@ -154,8 +149,9 @@ st.markdown(
     '<div class="main-title">🚀 AI Career Intelligence System</div>',
     unsafe_allow_html=True
 )
+
 st.markdown(
-    '<div class="subtitle">Multi-Agent AI system for resume analysis, semantic job matching, and career strategy.</div>',
+    '<div class="subtitle">Multi-Agent AI system for resume analysis, live job refresh, semantic matching, and career strategy.</div>',
     unsafe_allow_html=True
 )
 
@@ -166,15 +162,41 @@ st.sidebar.header("👤 Resume")
 uploaded_file = st.sidebar.file_uploader("Upload Resume PDF", type=["pdf"])
 
 st.sidebar.markdown("### 🔍 Job Preferences")
+
 role = st.sidebar.text_input(
     "Target Role",
+    value="Software Engineering Intern",
     placeholder="Example: Software Engineer Intern"
 )
+
 location = st.sidebar.text_input(
     "Preferred Location",
+    value="Maryland",
     placeholder="Example: Remote, Maryland"
 )
+
 top_n = st.sidebar.slider("Number of Jobs", 3, 10, 3)
+
+st.sidebar.markdown("### 🌐 Live Job Data")
+
+if st.sidebar.button("🔄 Refresh Live Jobs", use_container_width=True):
+    try:
+        with st.sidebar.spinner("Fetching fresh jobs..."):
+            fresh_jobs = fetch_live_jobs(
+                role=role,
+                location=location,
+                results_per_page=25
+            )
+
+        st.sidebar.success(f"Fetched {len(fresh_jobs)} fresh jobs")
+
+        with st.sidebar.spinner("Rebuilding job embeddings..."):
+            build_embeddings()
+
+        st.sidebar.success("Job embeddings updated")
+
+    except Exception as error:
+        st.sidebar.error(f"Job refresh failed: {error}")
 
 resume_text = None
 
@@ -209,7 +231,7 @@ if resume_text:
             for index, job in enumerate(result.top_jobs, start=1):
                 render_job_card(job, index)
         else:
-            st.error("No jobs found. Try removing filters or refreshing job data.")
+            st.error("No jobs found. Try refreshing live jobs or changing filters.")
 
         # --------------------------
         # CAREER RECOMMENDATIONS
@@ -217,6 +239,7 @@ if resume_text:
         st.markdown("## 🎯 Career Recommendations")
 
         formatted_advice = format_links(result.final_answer)
+
         st.markdown(
             f'<div class="advice-card">{formatted_advice}</div>',
             unsafe_allow_html=True

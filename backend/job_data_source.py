@@ -2,13 +2,26 @@ import json
 import os
 
 
-def load_jobs():
-    file_path = os.path.join("data", "live_jobs.json")
+DATA_FILE = "data/live_jobs.json"
 
-    if not os.path.exists(file_path):
+
+def load_jobs():
+    """
+    Load jobs from data/live_jobs.json.
+    Returns an empty list if the file does not exist or is invalid.
+    """
+
+    if not os.path.exists(DATA_FILE):
         return []
 
-    with open(file_path, "r") as f:
-        jobs = json.load(f)
+    try:
+        with open(DATA_FILE, "r", encoding="utf-8") as file:
+            jobs = json.load(file)
 
-    return jobs
+        if not isinstance(jobs, list):
+            return []
+
+        return jobs
+
+    except json.JSONDecodeError:
+        return []
