@@ -15,6 +15,44 @@ class JobAgent(BaseAgent):
     def __init__(self):
         super().__init__("JobAgent")
 
+        # Skill aliases make matching more realistic.
+        # This fixes the issue where semantic match is good but exact skill match is 0.
+        self.skill_aliases = {
+            "python": ["python", "backend", "api", "scripting"],
+            "java": ["java", "object oriented", "oop"],
+            "javascript": ["javascript", "js", "frontend", "web development"],
+            "html": ["html", "web page", "frontend"],
+            "css": ["css", "styling", "frontend"],
+            "fastapi": ["fastapi", "api", "rest api", "backend"],
+            "flask": ["flask", "api", "backend"],
+            "restful apis": ["rest", "restful", "api", "apis", "endpoint"],
+            "rest api development": ["rest", "api", "apis", "endpoint"],
+            "sql": ["sql", "database", "postgresql", "sqlite"],
+            "sqlite": ["sqlite", "sql", "database"],
+            "postgresql": ["postgresql", "postgres", "sql", "database"],
+            "git": ["git", "github", "version control"],
+            "github": ["github", "git", "version control"],
+            "unit testing": ["testing", "unit testing", "test cases", "qa", "quality assurance"],
+            "code quality": ["code quality", "testing", "qa", "debugging"],
+            "system integration": ["integration", "systems", "software systems"],
+            "fullstack development": ["full stack", "fullstack", "frontend", "backend", "web application"],
+            "full-stack development": ["full stack", "fullstack", "frontend", "backend", "web application"],
+            "ai": ["ai", "artificial intelligence", "machine learning", "ml"],
+            "openai apis": ["openai", "ai", "llm", "api"],
+            "rag": ["rag", "retrieval augmented generation", "vector search", "semantic search"],
+            "faiss": ["faiss", "vector database", "vector search", "similarity search"],
+            "langchain": ["langchain", "llm", "ai pipeline", "agent"],
+            "vector embeddings": ["embedding", "embeddings", "vector", "semantic search"],
+            "semantic search": ["semantic", "search", "vector search", "similarity search"],
+            "streamlit": ["streamlit", "dashboard", "web app", "ui"],
+            "pydantic": ["pydantic", "validation", "data validation"],
+            "json": ["json", "data", "api response"],
+            "agile methodologies": ["agile", "scrum", "team collaboration"],
+            "data extraction and validation": ["data extraction", "validation", "parsing"],
+            "prompt engineering": ["prompt", "llm", "ai"],
+            "ats optimization": ["ats", "resume", "career"],
+        }
+
     def load_jobs_with_embeddings(self):
         """
         Load precomputed job embeddings if available.
@@ -56,21 +94,60 @@ Resume:
 {resume_text[:2500]}
 """
 
+    def normalize_text(self, text):
+        """
+        Normalize text for matching and deduplication.
+        """
+        text = (text or "").lower().strip()
+        text = re.sub(r"[^a-z0-9\s\+\#\.]", " ", text)
+        text = re.sub(r"\s+", " ", text)
+        return text
+
+    def get_aliases_for_skill(self, skill):
+        """
+        Return aliases for a skill.
+        If no aliases exist, return the skill itself.
+        """
+        normalized_skill = self.normalize_text(skill)
+
+        aliases = self.skill_aliases.get(normalized_skill, [normalized_skill])
+
+        return [self.normalize_text(alias) for alias in aliases]
+
     def calculate_skill_score(self, user_skills, job_text):
         """
-        Count exact skill matches inside job text.
+        Smarter skill matching:
+        - exact skill match
+        - alias match
+        - related term match
         """
         if not user_skills:
             return 0, []
 
-        job_text = job_text.lower()
+        normalized_job_text = self.normalize_text(job_text)
 
-        matched_skills = [
-            skill for skill in user_skills
-            if skill.lower() in job_text
-        ]
+        matched_skills = []
 
-        return len(matched_skills), matched_skills
+        for skill in user_skills:
+            normalized_skill = self.normalize_text(skill)
+            aliases = self.get_aliases_for_skill(normalized_skill)
+
+            for alias in aliases:
+                if alias and alias in normalized_job_text:
+                    matched_skills.append(skill)
+                    break
+
+        # Remove duplicates while preserving order
+        unique_matched_skills = []
+        seen = set()
+
+        for skill in matched_skills:
+            clean_skill = skill.strip().lower()
+            if clean_skill not in seen:
+                unique_matched_skills.append(skill)
+                seen.add(clean_skill)
+
+        return len(unique_matched_skills), unique_matched_skills
 
     def calculate_filter_boost(self, job, role_filter, location_filter):
         """
@@ -78,11 +155,14 @@ Resume:
         """
         boost = 0
 
-        title = job.get("title", "").lower()
-        location = job.get("location", "").lower()
-        description = job.get("description", "").lower()
+        title = self.normalize_text(job.get("title", ""))
+        location = self.normalize_text(job.get("location", ""))
+        description = self.normalize_text(job.get("description", ""))
 
         job_text = f"{title} {location} {description}"
+
+        role_filter = self.normalize_text(role_filter)
+        location_filter = self.normalize_text(location_filter)
 
         if role_filter and role_filter in job_text:
             boost += 5
@@ -91,15 +171,6 @@ Resume:
             boost += 5
 
         return boost
-
-    def normalize_text(self, text):
-        """
-        Normalize text for duplicate detection.
-        """
-        text = (text or "").lower().strip()
-        text = re.sub(r"[^a-z0-9\s]", "", text)
-        text = re.sub(r"\s+", " ", text)
-        return text
 
     def deduplicate_jobs(self, scored_jobs):
         """
@@ -142,8 +213,8 @@ Resume:
             skills_preview = ", ".join(matched_skills[:5])
             return f"Matched based on skills such as {skills_preview} and overall resume similarity."
 
-        if semantic_score >= 0.70:
-            return "Matched because the job description is semantically close to your resume and project experience."
+        if semantic_score >= 0.45:
+            return "Matched because the job description is semantically related to your software engineering background."
 
         return "Included as a related opportunity based on software engineering internship relevance."
 
@@ -196,12 +267,11 @@ Resume:
             semantic_points = semantic_score * 100
 
             final_score = (
-                semantic_points * 0.80
-                + skill_score * 3
+                semantic_points * 0.75
+                + skill_score * 4
                 + filter_boost
             )
 
-            # Normalize final score to a user-friendly percentage.
             match_percentage = max(0, min(100, round(final_score)))
 
             job["semantic_score"] = round(float(semantic_score), 3)
@@ -247,7 +317,7 @@ Resume:
         for job in state.top_jobs:
             self.log(
                 state,
-                f"Selected: {job.get('title')} at {job.get('company')} | match={job.get('match_percentage')}%"
+                f"Selected: {job.get('title')} at {job.get('company')} | match={job.get('match_percentage')}% | skills={job.get('matched_skills')}"
             )
 
         state.add_message(
