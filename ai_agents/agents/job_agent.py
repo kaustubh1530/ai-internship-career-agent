@@ -91,7 +91,7 @@ Extracted Skills:
 {skills_text}
 
 Resume:
-{resume_text[:2500]}
+{resume_text[:7500]}
 """
 
     def normalize_text(self, text):

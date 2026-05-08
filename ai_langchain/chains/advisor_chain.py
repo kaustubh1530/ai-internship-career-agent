@@ -13,7 +13,7 @@ class AdvisorChain:
         # -------------------------
         # 🔥 PERFORMANCE FIXES
         # -------------------------
-        resume = (resume or "")[:1500]
+        resume = (resume or "")[:4500]
         jobs = jobs[:5]
         skills = skills[:20]
 

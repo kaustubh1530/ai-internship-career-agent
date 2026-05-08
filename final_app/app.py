@@ -19,29 +19,124 @@ from backend.build_job_embeddings import build_embeddings
 st.set_page_config(
     page_title="AI Career Intelligence System",
     page_icon="🚀",
-    layout="wide"
+    layout="wide",
+    initial_sidebar_state="expanded"
 )
 
 # ==============================
-# CSS
+# CUSTOM CSS
 # ==============================
 st.markdown("""
 <style>
-.main-title {
-    font-size: 42px;
-    font-weight: 800;
-    margin-bottom: 0px;
+/* Main page spacing */
+.block-container {
+    padding-top: 2rem;
+    padding-bottom: 2rem;
 }
 
-.subtitle {
-    color: #9ca3af;
+/* Hero section */
+.hero {
+    background: linear-gradient(135deg, #0f172a 0%, #111827 50%, #1e293b 100%);
+    padding: 34px;
+    border-radius: 24px;
+    border: 1px solid #1f2937;
+    margin-bottom: 28px;
+    box-shadow: 0 12px 30px rgba(0,0,0,0.25);
+}
+
+.hero-title {
+    font-size: 44px;
+    font-weight: 850;
+    margin-bottom: 8px;
+    color: white;
+}
+
+.hero-subtitle {
+    color: #cbd5e1;
     font-size: 18px;
-    margin-bottom: 25px;
+    line-height: 1.6;
+    max-width: 950px;
 }
 
+/* Section header */
+.section-heading {
+    font-size: 26px;
+    font-weight: 750;
+    margin-top: 20px;
+    margin-bottom: 14px;
+}
+
+/* Small feature badges */
+.badge {
+    display: inline-block;
+    background-color: #1d4ed8;
+    color: white;
+    padding: 7px 12px;
+    border-radius: 999px;
+    margin-right: 8px;
+    margin-top: 12px;
+    font-size: 13px;
+    font-weight: 650;
+}
+
+/* Job cards */
+.job-card {
+    background: linear-gradient(135deg, #111827 0%, #0f172a 100%);
+    border: 1px solid #1f2937;
+    border-radius: 20px;
+    padding: 22px;
+    margin-bottom: 18px;
+    box-shadow: 0 8px 22px rgba(0,0,0,0.18);
+}
+
+.job-title {
+    font-size: 23px;
+    font-weight: 750;
+    color: white;
+    margin-bottom: 4px;
+}
+
+.company-line {
+    color: #cbd5e1;
+    font-size: 15px;
+    margin-bottom: 16px;
+}
+
+.match-chip {
+    display: inline-block;
+    padding: 7px 12px;
+    border-radius: 999px;
+    background-color: #2563eb;
+    color: white;
+    font-weight: 750;
+    font-size: 13px;
+    margin-right: 8px;
+    margin-bottom: 10px;
+}
+
+.match-chip-green {
+    background-color: #047857;
+}
+
+.match-chip-yellow {
+    background-color: #b45309;
+}
+
+.reason-box {
+    background-color: #020617;
+    border: 1px solid #1e293b;
+    border-radius: 14px;
+    padding: 14px;
+    margin-top: 14px;
+    color: #e5e7eb;
+    font-size: 14px;
+    line-height: 1.55;
+}
+
+/* Skill pills */
 .skill-pill {
     display: inline-block;
-    padding: 5px 10px;
+    padding: 6px 10px;
     border-radius: 999px;
     background-color: #064e3b;
     color: #d1fae5;
@@ -50,17 +145,38 @@ st.markdown("""
     margin-top: 6px;
 }
 
+/* Career advice card */
 .advice-card {
-    background-color: #111827;
-    padding: 24px;
-    border-radius: 18px;
+    background: linear-gradient(135deg, #111827 0%, #0f172a 100%);
+    padding: 26px;
+    border-radius: 22px;
     border: 1px solid #1f2937;
     color: white;
-    line-height: 1.7;
+    line-height: 1.75;
+    box-shadow: 0 8px 22px rgba(0,0,0,0.18);
+}
+
+/* Resume preview */
+.resume-box {
+    background-color: #020617;
+    border: 1px solid #1e293b;
+    border-radius: 16px;
+    padding: 16px;
+    color: #cbd5e1;
+    font-size: 14px;
+    line-height: 1.5;
+    max-height: 230px;
+    overflow-y: auto;
+}
+
+/* Footer */
+.footer {
+    color: #94a3b8;
+    text-align: center;
+    margin-top: 30px;
 }
 </style>
 """, unsafe_allow_html=True)
-
 
 # ==============================
 # HELPERS
@@ -71,7 +187,7 @@ def format_links(text):
 
     text = re.sub(
         r'\[([^\]]+)\]\((https?://[^\)]+)\)',
-        r'<a href="\2" target="_blank">\1</a>',
+        r'<a href="\\2" target="_blank">\\1</a>',
         text
     )
 
@@ -91,6 +207,14 @@ def render_skill_pills(skills):
     st.markdown(pills_html, unsafe_allow_html=True)
 
 
+def get_match_chip_class(match_percentage):
+    if match_percentage >= 70:
+        return "match-chip match-chip-green"
+    if match_percentage >= 40:
+        return "match-chip match-chip-yellow"
+    return "match-chip"
+
+
 def render_job_card(job, index):
     title = job.get("title", "Untitled Role")
     company = job.get("company", "Unknown Company")
@@ -107,51 +231,95 @@ def render_job_card(job, index):
         "This role was selected based on resume relevance."
     )
 
-    with st.container(border=True):
-        top_col, score_col = st.columns([4, 1])
+    chip_class = get_match_chip_class(match_percentage)
+
+    with st.container():
+        st.markdown('<div class="job-card">', unsafe_allow_html=True)
+
+        top_col, action_col = st.columns([4, 1])
 
         with top_col:
-            st.subheader(f"{index}. {title}")
-            st.markdown(f"**{company}** — {location}")
+            st.markdown(
+                f"""
+                <div class="job-title">{index}. {title}</div>
+                <div class="company-line"><b>{company}</b> — {location}</div>
+                """,
+                unsafe_allow_html=True
+            )
 
-        with score_col:
-            st.metric("Match", f"{match_percentage}%")
+        with action_col:
+            if url and url != "#":
+                st.link_button("Apply Now", url, use_container_width=True)
+            else:
+                st.warning("No link")
+
+        st.markdown(
+            f"""
+            <span class="{chip_class}">{match_percentage}% Match</span>
+            <span class="match-chip">{match_level}</span>
+            """,
+            unsafe_allow_html=True
+        )
 
         st.progress(min(match_percentage / 100, 1.0))
 
-        col1, col2, col3 = st.columns(3)
+        metric_col1, metric_col2, metric_col3 = st.columns(3)
 
-        with col1:
-            st.markdown(f"**Match Level:** {match_level}")
+        with metric_col1:
+            st.metric("AI Similarity", semantic_score)
 
-        with col2:
-            st.markdown(f"**AI Similarity:** {semantic_score}")
+        with metric_col2:
+            st.metric("Skill Matches", skill_score)
 
-        with col3:
-            st.markdown(f"**Skill Matches:** {skill_score}")
+        with metric_col3:
+            st.metric("Final Score", job.get("score", 0))
 
-        st.markdown("**Matched Skills:**")
+        st.markdown("**Matched Skills**")
         render_skill_pills(matched_skills)
 
-        st.markdown("**Why this matched:**")
-        st.info(reason)
+        st.markdown(
+            f"""
+            <div class="reason-box">
+                <b>Why this matched:</b><br>
+                {reason}
+            </div>
+            """,
+            unsafe_allow_html=True
+        )
 
-        if url and url != "#":
-            st.link_button("Apply Now", url, use_container_width=True)
-        else:
-            st.warning("No application link available.")
+        st.markdown("</div>", unsafe_allow_html=True)
+
+
+def render_resume_preview(resume_text):
+    if not resume_text:
+        st.warning("No resume text found.")
+        return
+
+    st.text_area(
+        label="Parsed Resume Text",
+        value=resume_text,
+        height=400,
+        disabled=True
+    )
 
 
 # ==============================
-# HEADER
+# HERO
 # ==============================
 st.markdown(
-    '<div class="main-title">🚀 AI Career Intelligence System</div>',
-    unsafe_allow_html=True
-)
-
-st.markdown(
-    '<div class="subtitle">Multi-Agent AI system for resume analysis, live job refresh, semantic matching, and career strategy.</div>',
+    """
+    <div class="hero">
+        <div class="hero-title">🚀 AI Career Intelligence System</div>
+        <div class="hero-subtitle">
+            Upload your resume, refresh live jobs, and get semantic AI-powered job matches with career recommendations.
+            Built with multi-agent orchestration, embeddings, memory, and explainable matching.
+        </div>
+        <span class="badge">Multi-Agent AI</span>
+        <span class="badge">Semantic Matching</span>
+        <span class="badge">Live Jobs</span>
+        <span class="badge">Career Strategy</span>
+    </div>
+    """,
     unsafe_allow_html=True
 )
 
@@ -161,7 +329,8 @@ st.markdown(
 st.sidebar.header("👤 Resume")
 uploaded_file = st.sidebar.file_uploader("Upload Resume PDF", type=["pdf"])
 
-st.sidebar.markdown("### 🔍 Job Preferences")
+st.sidebar.markdown("---")
+st.sidebar.header("🔍 Job Preferences")
 
 role = st.sidebar.text_input(
     "Target Role",
@@ -177,26 +346,10 @@ location = st.sidebar.text_input(
 
 top_n = st.sidebar.slider("Number of Jobs", 3, 10, 3)
 
-st.sidebar.markdown("### 🌐 Live Job Data")
+st.sidebar.markdown("---")
+st.sidebar.header("🌐 Live Job Data")
 
-if st.sidebar.button("🔄 Refresh Live Jobs", use_container_width=True):
-    try:
-        with st.sidebar.spinner("Fetching fresh jobs..."):
-            fresh_jobs = fetch_live_jobs(
-                role=role,
-                location=location,
-                results_per_page=25
-            )
-
-        st.sidebar.success(f"Fetched {len(fresh_jobs)} fresh jobs")
-
-        with st.sidebar.spinner("Rebuilding job embeddings..."):
-            build_embeddings()
-
-        st.sidebar.success("Job embeddings updated")
-
-    except Exception as error:
-        st.sidebar.error(f"Job refresh failed: {error}")
+refresh_jobs = st.sidebar.button("🔄 Refresh Live Jobs", use_container_width=True)
 
 resume_text = None
 
@@ -207,13 +360,39 @@ if uploaded_file:
     st.sidebar.success("Resume loaded successfully")
 
 # ==============================
-# MAIN
+# LIVE JOB REFRESH
 # ==============================
-st.markdown("## 🧠 AI Career Analysis")
+if refresh_jobs:
+    try:
+        with st.spinner("Fetching fresh jobs from API..."):
+            fresh_jobs = fetch_live_jobs(
+                role=role,
+                location=location,
+                results_per_page=25
+            )
+
+        st.success(f"Fetched {len(fresh_jobs)} fresh jobs")
+
+        with st.spinner("Rebuilding semantic job embeddings..."):
+            build_embeddings()
+
+        st.success("Job embeddings updated successfully")
+
+    except Exception as error:
+        st.error(f"Job refresh failed: {error}")
+
+# ==============================
+# MAIN CONTENT
+# ==============================
+st.markdown('<div class="section-heading">🧠 AI Career Analysis</div>', unsafe_allow_html=True)
 
 if resume_text:
-    if st.button("🚀 Run AI Analysis", use_container_width=True):
+    with st.expander("📄 Resume Preview", expanded=False):
+        render_resume_preview(resume_text)
 
+    run_analysis = st.button("🚀 Run AI Analysis", use_container_width=True)
+
+    if run_analysis:
         with st.spinner("Running multi-agent AI system..."):
             result = run_multi_agent_system(
                 resume_text,
@@ -222,10 +401,30 @@ if resume_text:
                 top_n=top_n
             )
 
-        # --------------------------
+        # ==============================
+        # SUMMARY METRICS
+        # ==============================
+        st.markdown('<div class="section-heading">📊 Analysis Summary</div>', unsafe_allow_html=True)
+
+        summary_col1, summary_col2, summary_col3, summary_col4 = st.columns(4)
+
+        with summary_col1:
+            st.metric("Jobs Returned", len(result.top_jobs))
+
+        with summary_col2:
+            st.metric("Skills Found", len(result.extracted_skills))
+
+        with summary_col3:
+            best_match = result.top_jobs[0].get("match_percentage", 0) if result.top_jobs else 0
+            st.metric("Best Match", f"{best_match}%")
+
+        with summary_col4:
+            st.metric("Agents Used", "4+")
+
+        # ==============================
         # JOB MATCHES
-        # --------------------------
-        st.markdown("## 💼 Top Job Matches")
+        # ==============================
+        st.markdown('<div class="section-heading">💼 Top Job Matches</div>', unsafe_allow_html=True)
 
         if result.top_jobs:
             for index, job in enumerate(result.top_jobs, start=1):
@@ -233,10 +432,10 @@ if resume_text:
         else:
             st.error("No jobs found. Try refreshing live jobs or changing filters.")
 
-        # --------------------------
+        # ==============================
         # CAREER RECOMMENDATIONS
-        # --------------------------
-        st.markdown("## 🎯 Career Recommendations")
+        # ==============================
+        st.markdown('<div class="section-heading">🎯 Career Recommendations</div>', unsafe_allow_html=True)
 
         formatted_advice = format_links(result.final_answer)
 
@@ -245,15 +444,18 @@ if resume_text:
             unsafe_allow_html=True
         )
 
-        # --------------------------
+        # ==============================
         # LOGS
-        # --------------------------
+        # ==============================
         with st.expander("🧠 View AI System Logs"):
             for log in result.logs:
                 st.write(log)
 
 else:
-    st.warning("Please upload your resume to start.")
+    st.info("Upload your resume from the sidebar to start your AI career analysis.")
 
 st.markdown("---")
-st.caption("🚀 Built by Kaustubh Patil | Multi-Agent AI Career Intelligence System")
+st.markdown(
+    '<div class="footer">🚀 Built by Kaustubh Patil | Multi-Agent AI Career Intelligence System</div>',
+    unsafe_allow_html=True
+)
