@@ -710,6 +710,108 @@
         "job_quality": "good",
         "recommendation_quality": "good"
       }
+    },
+    {
+      "skills": [
+        "fullstack development",
+        "system integration",
+        "code quality",
+        "unit testing",
+        "restful apis",
+        "python",
+        "java",
+        "javascript",
+        "html",
+        "css",
+        "sqlite",
+        "postgresql",
+        "json",
+        "vector databases",
+        "fastapi",
+        "flask",
+        "pydantic",
+        "openai apis",
+        "rag",
+        "faiss",
+        "langchain",
+        "vector embeddings",
+        "git",
+        "github",
+        "postman",
+        "vs code",
+        "streamlit",
+        "jupyter",
+        "objectoriented programming (oop)",
+        "semantic search",
+        "agile methodologies",
+        "document ingestion and processing",
+        "vector search and retrieval",
+        "aipowered insights",
+        "ecommerce development",
+        "cloud integration and deployment",
+        "rest api development",
+        "data extraction and validation"
+      ],
+      "top_jobs": [
+        "Software QA Intern",
+        "Software Engineer Internships",
+        "Intern, Software Engineering",
+        "Software Engineering Intern - Hyper-RF Division"
+      ],
+      "feedback": {
+        "decision": "accept",
+        "job_quality": "good",
+        "recommendation_quality": "good"
+      }
+    },
+    {
+      "skills": [
+        "python",
+        "java",
+        "javascript",
+        "html",
+        "css",
+        "sqlite",
+        "postgresql",
+        "json",
+        "vector databases",
+        "fastapi",
+        "flask",
+        "rest apis",
+        "pydantic",
+        "openai apis",
+        "rag",
+        "faiss",
+        "langchain",
+        "vector embeddings",
+        "git",
+        "github",
+        "postman",
+        "vs code",
+        "streamlit",
+        "jupyter",
+        "objectoriented programming (oop)",
+        "semantic search",
+        "agile methodologies",
+        "unit testing",
+        "system integration",
+        "code review",
+        "database design",
+        "backend development",
+        "data structures",
+        "system architecture"
+      ],
+      "top_jobs": [
+        "AI ENGINEER INTERN",
+        "AI Engineer Intern",
+        "AI Engineer Intern",
+        "AI Engineer Intern"
+      ],
+      "feedback": {
+        "decision": "accept",
+        "job_quality": "good",
+        "recommendation_quality": "good"
+      }
     }
   ]
 }

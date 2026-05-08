@@ -1,5 +1,23 @@
+# Python cache
 __pycache__/
 *.pyc
-.env
-.DS_Store
+*.pyo
+*.pyd
+
+# Virtual environment
 venv/
+.venv/
+
+# Environment variables
+.env
+.env.local
+.streamlit/secrets.toml
+
+# OS files
+.DS_Store
+
+# Logs
+*.log
+
+# Jupyter
+.ipynb_checkpoints/

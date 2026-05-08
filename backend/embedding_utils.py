@@ -1,8 +1,26 @@
+import os
+from dotenv import load_dotenv
 from openai import OpenAI
 import numpy as np
 
+load_dotenv()
 
-client = OpenAI()
+
+def get_openai_client():
+    """
+    Create OpenAI client using OPENAI_API_KEY from:
+    - local .env
+    - local .streamlit/secrets.toml root-level env
+    - Streamlit Cloud secrets root-level env
+    """
+    api_key = os.getenv("OPENAI_API_KEY")
+
+    if not api_key:
+        raise ValueError(
+            "Missing OPENAI_API_KEY. Add it to .env locally or Streamlit Secrets in deployment."
+        )
+
+    return OpenAI(api_key=api_key)
 
 
 def get_embedding(text: str):
@@ -11,6 +29,8 @@ def get_embedding(text: str):
     """
     if not text or not text.strip():
         text = "empty"
+
+    client = get_openai_client()
 
     response = client.embeddings.create(
         model="text-embedding-3-small",

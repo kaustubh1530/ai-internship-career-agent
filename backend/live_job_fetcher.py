@@ -8,11 +8,23 @@ load_dotenv()
 DATA_FILE = "data/live_jobs.json"
 
 
+def get_secret(key: str):
+    """
+    Read secrets safely from environment variables.
+    Streamlit Cloud root-level secrets are also available as environment variables.
+    """
+    value = os.getenv(key)
+
+    if value:
+        return value
+
+    return None
+
+
 def normalize_job(raw_job):
     """
-    Convert raw API job data into the clean format our app expects.
+    Convert raw Adzuna API job data into the clean format our app expects.
     """
-
     title = raw_job.get("title", "Untitled Job")
     company = raw_job.get("company", {}).get("display_name", "Unknown Company")
     location = raw_job.get("location", {}).get("display_name", "Unknown Location")
@@ -28,17 +40,20 @@ def normalize_job(raw_job):
     }
 
 
-def fetch_live_jobs(role="software engineering intern", location="Maryland", results_per_page=20):
+def fetch_live_jobs(
+    role="software engineering intern",
+    location="Maryland",
+    results_per_page=20
+):
     """
     Fetch fresh jobs from Adzuna and save them to data/live_jobs.json.
     """
-
-    app_id = os.getenv("ADZUNA_APP_ID")
-    app_key = os.getenv("ADZUNA_APP_KEY")
+    app_id = get_secret("ADZUNA_APP_ID")
+    app_key = get_secret("ADZUNA_APP_KEY")
 
     if not app_id or not app_key:
         raise ValueError(
-            "Missing ADZUNA_APP_ID or ADZUNA_APP_KEY in .env file."
+            "Missing ADZUNA_APP_ID or ADZUNA_APP_KEY. Add them to .env locally or Streamlit Secrets in deployment."
         )
 
     role = role or "software engineering intern"
