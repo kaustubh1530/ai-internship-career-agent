@@ -447,9 +447,12 @@ if resume_text:
         # ==============================
         # LOGS
         # ==============================
-        with st.expander("🧠 View AI System Logs"):
-            for log in result.logs:
-                st.write(log)
+        show_debug_logs = st.sidebar.checkbox("Developer Mode", value=False)
+
+        if show_debug_logs:
+            with st.expander("🧠 Developer Logs"):
+                for log in result.logs:
+                    st.write(log)
 
 else:
     st.info("Upload your resume from the sidebar to start your AI career analysis.")
