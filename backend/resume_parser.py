@@ -1,5 +1,6 @@
 from io import BytesIO
 import os
+from typing import List
 
 from dotenv import load_dotenv
 from openai import OpenAI
@@ -8,11 +9,17 @@ from pypdf import PdfReader
 from ai_langchain.context import set_user_skills
 
 
-# ENV + OPENAI CLIENT
+# ENV SETUP
 load_dotenv()
 
 
-def get_openai_client():
+def get_openai_client() -> OpenAI:
+    """
+    Create OpenAI client using OPENAI_API_KEY from:
+    - local .env
+    - Railway environment variables
+    """
+
     api_key = os.getenv("OPENAI_API_KEY")
 
     if not api_key:
@@ -24,7 +31,7 @@ def get_openai_client():
 
 
 # EXTRACT TEXT FROM PDF
-def extract_text_from_pdf(uploaded_file):
+def extract_text_from_pdf(uploaded_file) -> str:
     """
     Extract text from an uploaded PDF file using pypdf.
     Works locally and on Railway.
@@ -36,22 +43,22 @@ def extract_text_from_pdf(uploaded_file):
 
         reader = PdfReader(pdf_stream)
 
-        text = ""
+        text_parts = []
 
         for page in reader.pages:
             page_text = page.extract_text()
 
             if page_text:
-                text += page_text + "\n"
+                text_parts.append(page_text)
 
-        return text.strip()
+        return "\n".join(text_parts).strip()
 
     except Exception as error:
         return f"Error reading PDF: {error}"
 
 
 # EXTRACT SKILLS USING AI
-def extract_skills_from_text(text):
+def extract_skills_from_text(text: str) -> List[str]:
     """
     Extract technical skills from resume text using OpenAI.
     Returns a clean list of lowercase skills.
@@ -93,7 +100,7 @@ Resume:
 
 
 # AI SKILL MATCHING
-def ai_match_skills(user_skills, job_text):
+def ai_match_skills(user_skills: List[str], job_text: str) -> List[str]:
     """
     Use AI to identify which user skills match a job description.
     """
