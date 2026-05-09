@@ -3,9 +3,7 @@ import sys
 import os
 import re
 
-# ==============================
 # FIX PATH
-# ==============================
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from smart_agent import run_multi_agent_system
@@ -13,9 +11,7 @@ from backend.resume_parser import extract_text_from_pdf
 from backend.live_job_fetcher import fetch_live_jobs
 from backend.build_job_embeddings import build_embeddings
 
-# ==============================
 # PAGE CONFIG
-# ==============================
 st.set_page_config(
     page_title="AI Career Intelligence System",
     page_icon="🚀",
@@ -23,9 +19,7 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# ==============================
 # CUSTOM CSS
-# ==============================
 st.markdown("""
 <style>
 /* Main page spacing */
@@ -178,9 +172,7 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-# ==============================
 # HELPERS
-# ==============================
 def format_links(text):
     if not text:
         return "No career recommendation generated."
@@ -303,9 +295,7 @@ def render_resume_preview(resume_text):
     )
 
 
-# ==============================
 # HERO
-# ==============================
 st.markdown(
     """
     <div class="hero">
@@ -323,9 +313,7 @@ st.markdown(
     unsafe_allow_html=True
 )
 
-# ==============================
 # SIDEBAR
-# ==============================
 st.sidebar.header("👤 Resume")
 uploaded_file = st.sidebar.file_uploader("Upload Resume PDF", type=["pdf"])
 
@@ -359,9 +347,7 @@ if uploaded_file:
 
     st.sidebar.success("Resume loaded successfully")
 
-# ==============================
 # LIVE JOB REFRESH
-# ==============================
 if refresh_jobs:
     try:
         with st.spinner("Fetching fresh jobs from API..."):
@@ -381,9 +367,7 @@ if refresh_jobs:
     except Exception as error:
         st.error(f"Job refresh failed: {error}")
 
-# ==============================
 # MAIN CONTENT
-# ==============================
 st.markdown('<div class="section-heading">🧠 AI Career Analysis</div>', unsafe_allow_html=True)
 
 if resume_text:
@@ -401,9 +385,7 @@ if resume_text:
                 top_n=top_n
             )
 
-        # ==============================
         # SUMMARY METRICS
-        # ==============================
         st.markdown('<div class="section-heading">📊 Analysis Summary</div>', unsafe_allow_html=True)
 
         summary_col1, summary_col2, summary_col3, summary_col4 = st.columns(4)
@@ -421,9 +403,7 @@ if resume_text:
         with summary_col4:
             st.metric("Agents Used", "4+")
 
-        # ==============================
         # JOB MATCHES
-        # ==============================
         st.markdown('<div class="section-heading">💼 Top Job Matches</div>', unsafe_allow_html=True)
 
         if result.top_jobs:
@@ -432,9 +412,7 @@ if resume_text:
         else:
             st.error("No jobs found. Try refreshing live jobs or changing filters.")
 
-        # ==============================
         # CAREER RECOMMENDATIONS
-        # ==============================
         st.markdown('<div class="section-heading">🎯 Career Recommendations</div>', unsafe_allow_html=True)
 
         formatted_advice = format_links(result.final_answer)
@@ -444,9 +422,7 @@ if resume_text:
             unsafe_allow_html=True
         )
 
-        # ==============================
         # LOGS
-        # ==============================
         show_debug_logs = st.sidebar.checkbox("Developer Mode", value=False)
 
         if show_debug_logs:

@@ -6,9 +6,7 @@ def score_jobs(jobs, skills):
     - explainable output
     """
 
-    # -------------------------
     # SKILL WEIGHTS 
-    # -------------------------
     skill_weights = {
         "python": 3,
         "fastapi": 2,

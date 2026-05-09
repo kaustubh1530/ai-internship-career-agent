@@ -10,9 +10,7 @@ class FeedbackAgent(BaseAgent):
 
         feedback = {}
 
-        # -------------------------
         # CHECK JOB QUALITY
-        # -------------------------
         if not state.top_jobs or len(state.top_jobs) < 3:
             feedback["jobs_quality"] = "low"
             self.log(state, "Feedback: Job quality is LOW")
@@ -20,9 +18,7 @@ class FeedbackAgent(BaseAgent):
             feedback["jobs_quality"] = "good"
             self.log(state, "Feedback: Job quality is GOOD")
 
-        # -------------------------
         # CHECK SKILLS
-        # -------------------------
         if not state.extracted_skills:
             feedback["skills_quality"] = "low"
             self.log(state, "Feedback: Skills extraction is LOW")
