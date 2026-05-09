@@ -151,7 +151,28 @@ ai-internship-career-agent/
 ├── .gitignore
 └── README.md
 
+## Setup & Installation
 
+### Clone & Environment
+
+git clone https://github.com/kaustubh1530/ai-internship-career-agent.git
+cd ai-internship-career-agent
+python -m venv venv
+source venv/bin/activate  # Windows: venv\Scripts\activate
+pip install -r requirements.txt
+
+### Configuration
+
+Create a .env file in the root directory:
+
+Code snippet
+OPENAI_API_KEY=your_openai_key
+ADZUNA_APP_ID=your_adzuna_id
+ADZUNA_APP_KEY=your_adzuna_key
+
+### Run Application
+
+streamlit run final_app/app.py
 ---
 
 ## Screenshots
@@ -178,28 +199,6 @@ ai-internship-career-agent/
 ![Demo](assets/demo.gif)
 ---
 
-## Setup & Installation
-
-### Clone & Environment
-
-git clone https://github.com/kaustubh1530/ai-internship-career-agent.git
-cd ai-internship-career-agent
-python -m venv venv
-source venv/bin/activate  # Windows: venv\Scripts\activate
-pip install -r requirements.txt
-
-### Configuration
-
-Create a .env file in the root directory:
-
-Code snippet
-OPENAI_API_KEY=your_openai_key
-ADZUNA_APP_ID=your_adzuna_id
-ADZUNA_APP_KEY=your_adzuna_key
-
-### Run Application
-
-streamlit run final_app/app.py
 
 Example User Flow
 Upload: User drops a PDF resume into the app.
