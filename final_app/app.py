@@ -1,4 +1,4 @@
-import streamlit as st
+iimport streamlit as st
 import sys
 import os
 import re
@@ -19,16 +19,21 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
+# SESSION STATE
+if "jobs_refreshed" not in st.session_state:
+    st.session_state.jobs_refreshed = False
+
+if "last_error" not in st.session_state:
+    st.session_state.last_error = None
+
 # CUSTOM CSS
 st.markdown("""
 <style>
-/* Main page spacing */
 .block-container {
     padding-top: 2rem;
     padding-bottom: 2rem;
 }
 
-/* Hero section */
 .hero {
     background: linear-gradient(135deg, #0f172a 0%, #111827 50%, #1e293b 100%);
     padding: 34px;
@@ -52,7 +57,6 @@ st.markdown("""
     max-width: 950px;
 }
 
-/* Section header */
 .section-heading {
     font-size: 26px;
     font-weight: 750;
@@ -60,7 +64,6 @@ st.markdown("""
     margin-bottom: 14px;
 }
 
-/* Small feature badges */
 .badge {
     display: inline-block;
     background-color: #1d4ed8;
@@ -73,61 +76,6 @@ st.markdown("""
     font-weight: 650;
 }
 
-/* Job cards */
-.job-card {
-    background: linear-gradient(135deg, #111827 0%, #0f172a 100%);
-    border: 1px solid #1f2937;
-    border-radius: 20px;
-    padding: 22px;
-    margin-bottom: 18px;
-    box-shadow: 0 8px 22px rgba(0,0,0,0.18);
-}
-
-.job-title {
-    font-size: 23px;
-    font-weight: 750;
-    color: white;
-    margin-bottom: 4px;
-}
-
-.company-line {
-    color: #cbd5e1;
-    font-size: 15px;
-    margin-bottom: 16px;
-}
-
-.match-chip {
-    display: inline-block;
-    padding: 7px 12px;
-    border-radius: 999px;
-    background-color: #2563eb;
-    color: white;
-    font-weight: 750;
-    font-size: 13px;
-    margin-right: 8px;
-    margin-bottom: 10px;
-}
-
-.match-chip-green {
-    background-color: #047857;
-}
-
-.match-chip-yellow {
-    background-color: #b45309;
-}
-
-.reason-box {
-    background-color: #020617;
-    border: 1px solid #1e293b;
-    border-radius: 14px;
-    padding: 14px;
-    margin-top: 14px;
-    color: #e5e7eb;
-    font-size: 14px;
-    line-height: 1.55;
-}
-
-/* Skill pills */
 .skill-pill {
     display: inline-block;
     padding: 6px 10px;
@@ -139,7 +87,6 @@ st.markdown("""
     margin-top: 6px;
 }
 
-/* Career advice card */
 .advice-card {
     background: linear-gradient(135deg, #111827 0%, #0f172a 100%);
     padding: 26px;
@@ -150,7 +97,6 @@ st.markdown("""
     box-shadow: 0 8px 22px rgba(0,0,0,0.18);
 }
 
-/* Resume preview */
 .resume-box {
     background-color: #020617;
     border: 1px solid #1e293b;
@@ -163,7 +109,6 @@ st.markdown("""
     overflow-y: auto;
 }
 
-/* Footer */
 .footer {
     color: #94a3b8;
     text-align: center;
@@ -199,12 +144,17 @@ def render_skill_pills(skills):
     st.markdown(pills_html, unsafe_allow_html=True)
 
 
-def get_match_chip_class(match_percentage):
-    if match_percentage >= 70:
-        return "match-chip match-chip-green"
-    if match_percentage >= 40:
-        return "match-chip match-chip-yellow"
-    return "match-chip"
+def render_resume_preview(resume_text):
+    if not resume_text:
+        st.warning("No resume text found.")
+        return
+
+    st.text_area(
+        label="Parsed Resume Text",
+        value=resume_text,
+        height=400,
+        disabled=True
+    )
 
 
 def render_job_card(job, index):
@@ -223,21 +173,12 @@ def render_job_card(job, index):
         "This role was selected based on resume relevance."
     )
 
-    chip_class = get_match_chip_class(match_percentage)
-
-    with st.container():
-        st.markdown('<div class="job-card">', unsafe_allow_html=True)
-
+    with st.container(border=True):
         top_col, action_col = st.columns([4, 1])
 
         with top_col:
-            st.markdown(
-                f"""
-                <div class="job-title">{index}. {title}</div>
-                <div class="company-line"><b>{company}</b> — {location}</div>
-                """,
-                unsafe_allow_html=True
-            )
+            st.subheader(f"{index}. {title}")
+            st.markdown(f"**{company}** — {location}")
 
         with action_col:
             if url and url != "#":
@@ -245,54 +186,25 @@ def render_job_card(job, index):
             else:
                 st.warning("No link")
 
-        st.markdown(
-            f"""
-            <span class="{chip_class}">{match_percentage}% Match</span>
-            <span class="match-chip">{match_level}</span>
-            """,
-            unsafe_allow_html=True
-        )
-
+        st.metric("Match", f"{match_percentage}%")
         st.progress(min(match_percentage / 100, 1.0))
 
         metric_col1, metric_col2, metric_col3 = st.columns(3)
 
         with metric_col1:
-            st.metric("AI Similarity", semantic_score)
+            st.metric("Match Level", match_level)
 
         with metric_col2:
-            st.metric("Skill Matches", skill_score)
+            st.metric("AI Similarity", semantic_score)
 
         with metric_col3:
-            st.metric("Final Score", job.get("score", 0))
+            st.metric("Skill Matches", skill_score)
 
         st.markdown("**Matched Skills**")
         render_skill_pills(matched_skills)
 
-        st.markdown(
-            f"""
-            <div class="reason-box">
-                <b>Why this matched:</b><br>
-                {reason}
-            </div>
-            """,
-            unsafe_allow_html=True
-        )
-
-        st.markdown("</div>", unsafe_allow_html=True)
-
-
-def render_resume_preview(resume_text):
-    if not resume_text:
-        st.warning("No resume text found.")
-        return
-
-    st.text_area(
-        label="Parsed Resume Text",
-        value=resume_text,
-        height=400,
-        disabled=True
-    )
+        st.markdown("**Why this matched:**")
+        st.info(reason)
 
 
 # HERO
@@ -339,13 +251,25 @@ st.sidebar.header("🌐 Live Job Data")
 
 refresh_jobs = st.sidebar.button("🔄 Refresh Live Jobs", use_container_width=True)
 
+st.sidebar.markdown("---")
+st.sidebar.header("⚙️ Developer Options")
+show_logs = st.sidebar.checkbox("Show AI System Logs", value=False)
+
 resume_text = None
 
 if uploaded_file:
-    with st.sidebar.spinner("Reading resume..."):
-        resume_text = extract_text_from_pdf(uploaded_file)
+    try:
+        with st.sidebar.spinner("Reading resume..."):
+            resume_text = extract_text_from_pdf(uploaded_file)
 
-    st.sidebar.success("Resume loaded successfully")
+        if resume_text and resume_text.strip():
+            st.sidebar.success("Resume loaded successfully")
+        else:
+            st.sidebar.error("Resume text could not be extracted. Try another PDF.")
+
+    except Exception as error:
+        st.sidebar.error("Failed to read resume.")
+        st.session_state.last_error = str(error)
 
 # LIVE JOB REFRESH
 if refresh_jobs:
@@ -357,15 +281,20 @@ if refresh_jobs:
                 results_per_page=25
             )
 
-        st.success(f"Fetched {len(fresh_jobs)} fresh jobs")
+        if not fresh_jobs:
+            st.warning("No fresh jobs found. Try a broader role or location.")
+        else:
+            st.success(f"Fetched {len(fresh_jobs)} fresh jobs")
 
-        with st.spinner("Rebuilding semantic job embeddings..."):
-            build_embeddings()
+            with st.spinner("Rebuilding semantic job embeddings..."):
+                build_embeddings()
 
-        st.success("Job embeddings updated successfully")
+            st.session_state.jobs_refreshed = True
+            st.success("Job embeddings updated successfully")
 
     except Exception as error:
-        st.error(f"Job refresh failed: {error}")
+        st.error("Live job refresh failed. Please check API keys or try again.")
+        st.session_state.last_error = str(error)
 
 # MAIN CONTENT
 st.markdown('<div class="section-heading">🧠 AI Career Analysis</div>', unsafe_allow_html=True)
@@ -374,64 +303,74 @@ if resume_text:
     with st.expander("📄 Resume Preview", expanded=False):
         render_resume_preview(resume_text)
 
+    st.info("Tip: Refresh live jobs first for the newest job results, then run the AI analysis.")
+
     run_analysis = st.button("🚀 Run AI Analysis", use_container_width=True)
 
     if run_analysis:
-        with st.spinner("Running multi-agent AI system..."):
-            result = run_multi_agent_system(
-                resume_text,
-                role=role,
-                location=location,
-                top_n=top_n
+        try:
+            with st.spinner("Running multi-agent AI system..."):
+                result = run_multi_agent_system(
+                    resume_text,
+                    role=role,
+                    location=location,
+                    top_n=top_n
+                )
+
+            # SUMMARY METRICS
+            st.markdown('<div class="section-heading">📊 Analysis Summary</div>', unsafe_allow_html=True)
+
+            summary_col1, summary_col2, summary_col3, summary_col4 = st.columns(4)
+
+            with summary_col1:
+                st.metric("Jobs Returned", len(result.top_jobs))
+
+            with summary_col2:
+                st.metric("Skills Found", len(result.extracted_skills))
+
+            with summary_col3:
+                best_match = result.top_jobs[0].get("match_percentage", 0) if result.top_jobs else 0
+                st.metric("Best Match", f"{best_match}%")
+
+            with summary_col4:
+                st.metric("Agents Used", "4+")
+
+            # JOB MATCHES
+            st.markdown('<div class="section-heading">💼 Top Job Matches</div>', unsafe_allow_html=True)
+
+            if result.top_jobs:
+                for index, job in enumerate(result.top_jobs, start=1):
+                    render_job_card(job, index)
+            else:
+                st.error("No jobs found. Try refreshing live jobs or changing filters.")
+
+            # CAREER RECOMMENDATIONS
+            st.markdown('<div class="section-heading">🎯 Career Recommendations</div>', unsafe_allow_html=True)
+
+            formatted_advice = format_links(result.final_answer)
+
+            st.markdown(
+                f'<div class="advice-card">{formatted_advice}</div>',
+                unsafe_allow_html=True
             )
 
-        # SUMMARY METRICS
-        st.markdown('<div class="section-heading">📊 Analysis Summary</div>', unsafe_allow_html=True)
+            # LOGS
+            if show_logs:
+                with st.expander("🧠 Developer Logs"):
+                    for log in result.logs:
+                        st.write(log)
 
-        summary_col1, summary_col2, summary_col3, summary_col4 = st.columns(4)
-
-        with summary_col1:
-            st.metric("Jobs Returned", len(result.top_jobs))
-
-        with summary_col2:
-            st.metric("Skills Found", len(result.extracted_skills))
-
-        with summary_col3:
-            best_match = result.top_jobs[0].get("match_percentage", 0) if result.top_jobs else 0
-            st.metric("Best Match", f"{best_match}%")
-
-        with summary_col4:
-            st.metric("Agents Used", "4+")
-
-        # JOB MATCHES
-        st.markdown('<div class="section-heading">💼 Top Job Matches</div>', unsafe_allow_html=True)
-
-        if result.top_jobs:
-            for index, job in enumerate(result.top_jobs, start=1):
-                render_job_card(job, index)
-        else:
-            st.error("No jobs found. Try refreshing live jobs or changing filters.")
-
-        # CAREER RECOMMENDATIONS
-        st.markdown('<div class="section-heading">🎯 Career Recommendations</div>', unsafe_allow_html=True)
-
-        formatted_advice = format_links(result.final_answer)
-
-        st.markdown(
-            f'<div class="advice-card">{formatted_advice}</div>',
-            unsafe_allow_html=True
-        )
-
-        # LOGS
-        show_debug_logs = st.sidebar.checkbox("Developer Mode", value=False)
-
-        if show_debug_logs:
-            with st.expander("🧠 Developer Logs"):
-                for log in result.logs:
-                    st.write(log)
+        except Exception as error:
+            st.error("AI analysis failed. Please try again or refresh live jobs.")
+            st.session_state.last_error = str(error)
 
 else:
     st.info("Upload your resume from the sidebar to start your AI career analysis.")
+
+# DEVELOPER ERROR DETAILS
+if show_logs and st.session_state.last_error:
+    with st.expander("🚨 Last Error"):
+        st.code(st.session_state.last_error)
 
 st.markdown("---")
 st.markdown(
