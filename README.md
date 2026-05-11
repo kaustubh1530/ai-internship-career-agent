@@ -72,14 +72,14 @@ Agents communicate using a shared message system.
 ![Resume](assets/resume.png)
 
 ### Job Matches
-![Match1](assets/match1.png)
-![Match2](assets/match2.png)
+![Match1](assets/analysis.png)
+![Match2](assets/match1.png)
 
 ### AI Insights
-![Insights](assets/insights.png)
+![Insights](assets/career_advice1.png)
 
 ### Career Advice
-![Insights](assets/career_advice.png)
+![Insights](assets/career_advice2.png)
 ---
 
 ## Demo
