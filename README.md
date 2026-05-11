@@ -64,7 +64,6 @@ Agents communicate using a shared message system.
 
 Example:
 
-```text
 ResumeAgent → JobAgent: User skills extracted
 JobAgent → AdvisorAgent: Top semantic job matches ready 
 
@@ -174,7 +173,6 @@ ADZUNA_APP_KEY=your_adzuna_key
 
 streamlit run final_app/app.py
 ---
-```text
 
 ## Screenshots
 
