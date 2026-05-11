@@ -174,6 +174,7 @@ ADZUNA_APP_KEY=your_adzuna_key
 
 streamlit run final_app/app.py
 ---
+```text
 
 ## Screenshots
 
