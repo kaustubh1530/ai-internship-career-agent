@@ -62,8 +62,34 @@ The system uses multiple agents with shared state and communication:
 
 Agents communicate using a shared message system.
 
+
+## Screenshots
+
+### Profile Section
+![Profile](assets/profile.png)
+
+### Resume Upload
+![Resume](assets/resume.png)
+
+### Job Matches
+![Match1](assets/match1.png)
+![Match2](assets/match2.png)
+
+### AI Insights
+![Insights](assets/insights.png)
+
+### Career Advice
+![Insights](assets/career_advice.png)
+---
+
+## Demo
+### Full App Walkthrough
+![Demo](assets/demo.gif)
+---
+
 Example:
 
+```text
 ResumeAgent → JobAgent: User skills extracted
 JobAgent → AdvisorAgent: Top semantic job matches ready 
 
@@ -172,30 +198,6 @@ ADZUNA_APP_KEY=your_adzuna_key
 ### Run Application
 
 streamlit run final_app/app.py
----
-
-## Screenshots
-
-### Profile Section
-![Profile](assets/profile.png)
-
-### Resume Upload
-![Resume](assets/resume.png)
-
-### Job Matches
-![Match1](assets/match1.png)
-![Match2](assets/match2.png)
-
-### AI Insights
-![Insights](assets/insights.png)
-
-### Career Advice
-![Insights](assets/career_advice.png)
----
-
-## Demo
-### Full App Walkthrough
-![Demo](assets/demo.gif)
 ---
 
 
