@@ -26,7 +26,8 @@ def normalize_job(raw_job):
     Convert raw Adzuna API job data into the clean format our app expects.
     """
     title = raw_job.get("title", "Untitled Job")
-    company = raw_job.get("company", {}).get("display_name", "Unknown Company")
+    company_data = raw_job.get("company") or {}
+    company = company_data.get("display_name", "Unknown Company")
     location = raw_job.get("location", {}).get("display_name", "Unknown Location")
     description = raw_job.get("description", "")
     url = raw_job.get("redirect_url", "#")
