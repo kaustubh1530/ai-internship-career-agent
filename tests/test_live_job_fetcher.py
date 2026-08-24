@@ -1,5 +1,7 @@
 from unittest.mock import Mock
 from unittest.mock import patch
+import pytest
+import requests
 from backend.live_job_fetcher import fetch_live_jobs
 @patch("backend.live_job_fetcher.requests.get")
 def test_fetch_live_jobs(mock_get):
@@ -54,6 +56,13 @@ def test_fetch_live_jobs_api_failure(mock_get):
         }
     ]
 }
+
+    with pytest.raises(RuntimeError):
+        fetch_live_jobs()
+
+@patch("backend.live_job_fetcher.requests.get")
+def test_fetch_live_jobs_network_failure(mock_get):
+    mock_get.side_effect = requests.exceptions.RequestException("Network error")
 
     with pytest.raises(RuntimeError):
         fetch_live_jobs()

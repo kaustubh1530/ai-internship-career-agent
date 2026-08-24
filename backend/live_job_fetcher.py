@@ -71,12 +71,16 @@ def fetch_live_jobs(
         "content-type": "application/json"
     }
 
-    response = requests.get(url, params=params, timeout=20)
+    try:
+        response = requests.get(url, params=params, timeout=20)
 
-    if response.status_code != 200:
-        raise RuntimeError(
-            f"Job API request failed: {response.status_code} - {response.text}"
-        )
+        if response.status_code != 200:
+            raise RuntimeError(
+                f"Job API request failed: {response.status_code} - {response.text}"
+            )
+
+    except requests.exceptions.RequestException as exc:
+        raise RuntimeError("Network request to job API failed") from exc
 
     data = response.json()
     raw_jobs = data.get("results", [])
