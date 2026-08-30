@@ -23,7 +23,7 @@ def test_fetch_live_jobs(mock_get):
     ]
 }
 
-    
+
     result = fetch_live_jobs()
 
     assert result[0]["title"] == "Python Intern"
@@ -65,4 +65,12 @@ def test_fetch_live_jobs_network_failure(mock_get):
     mock_get.side_effect = requests.exceptions.RequestException("Network error")
 
     with pytest.raises(RuntimeError):
+        fetch_live_jobs()
+
+
+@patch("backend.live_job_fetcher.get_secret")
+def test_fetch_live_jobs_missing_credentials(mock_get_secret):
+    mock_get_secret.return_value = None
+
+    with pytest.raises(ValueError, match="Missing ADZUNA_APP_ID or ADZUNA_APP_KEY"):
         fetch_live_jobs()
