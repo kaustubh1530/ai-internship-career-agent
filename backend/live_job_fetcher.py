@@ -1,7 +1,10 @@
 import os
 import json
+import logging
 import requests
 from dotenv import load_dotenv
+
+logger = logging.getLogger(__name__)
 
 load_dotenv()
 
@@ -49,10 +52,18 @@ def fetch_live_jobs(
     """
     Fetch fresh jobs from Adzuna and save them to data/live_jobs.json.
     """
+
+    logger.info(
+        "Starting job search: role=%s location=%s",
+        role,
+        location
+    )
+
     app_id = get_secret("ADZUNA_APP_ID")
     app_key = get_secret("ADZUNA_APP_KEY")
 
     if not app_id or not app_key:
+        logger.error("Missing required Adzuna credentials")
         raise ValueError(
             "Missing ADZUNA_APP_ID or ADZUNA_APP_KEY. Add them to .env locally or Streamlit Secrets in deployment."
         )
@@ -75,11 +86,21 @@ def fetch_live_jobs(
         response = requests.get(url, params=params, timeout=20)
 
         if response.status_code != 200:
+            logger.error(
+                "Job API request failed: status_code=%s",
+                response.status_code
+            )
             raise RuntimeError(
                 f"Job API request failed: {response.status_code} - {response.text}"
             )
 
+        logger.info(
+            "Job API request succeeded: status_code=%s",
+            response.status_code
+        )
+
     except requests.exceptions.RequestException as exc:
+        logger.error("Network request to job API failed: %s", exc)
         raise RuntimeError("Network request to job API failed") from exc
 
     data = response.json()
@@ -87,6 +108,10 @@ def fetch_live_jobs(
 
     jobs = [normalize_job(job) for job in raw_jobs]
 
+    logger.info(
+        "Job search completed: fetched=%d jobs",
+        len(jobs)
+    )
     os.makedirs("data", exist_ok=True)
 
     with open(DATA_FILE, "w", encoding="utf-8") as file:
