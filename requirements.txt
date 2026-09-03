@@ -9,3 +9,4 @@ pandas
 pypdf
 PyMuPDF
 faiss-cpu
+fastapi
